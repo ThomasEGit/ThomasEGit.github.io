@@ -7,15 +7,13 @@
   <title>Thomas Ellett — Software Engineer</title>
   <meta name="description" content="Software engineer working on GPU acceleration, distributed systems, and video and image processing. Projects, notes, and technical writing." />
 
-  <!-- Social sharing. Set the URLs to your real domain once you deploy. -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Thomas Ellett — Software Engineer" />
   <meta property="og:description" content="Software engineer working on GPU acceleration, distributed systems, and video and image processing. Projects, notes, and technical writing." />
-  <meta property="og:image" content="https://example.com/images/headshot.jpg" />
-  <meta property="og:url" content="https://example.com/" />
+  <meta property="og:image" content="https://thomasegit.github.io/images/headshot.jpg" />
+  <meta property="og:url" content="https://thomasegit.github.io/" />
   <meta name="twitter:card" content="summary" />
 
-  <!-- Inline SVG favicon: no extra file to manage. -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23faf9f6'/><text x='16' y='23' font-family='Georgia,serif' font-size='19' text-anchor='middle' fill='%231a1a18'>TE</text></svg>" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -29,11 +27,12 @@
     :root {
       --ink: #1a1a18;
       --ink-muted: #5a5a54;
-      --ink-faint: #6e6e66;      /* darkened from #9a9a90 — old value was 2.7:1, failed WCAG AA */
+      --ink-faint: #6e6e66;
       --paper: #faf9f6;
       --paper-tint: #f1f0ec;
       --rule: #dddbd3;
       --accent: #2a4fa8;
+	  --card-bg: #f9f6ec;
 
       --serif: 'Source Serif 4', Georgia, serif;
       --sans: 'Source Serif 4', Georgia, serif;
@@ -55,7 +54,7 @@
     section { padding: 3.5rem 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 5rem; }
     section:last-of-type { border-bottom: none; }
     .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.25rem; }
-    .section-num { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.1em; }
+    .section-num { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); letter-spacing: 0.1em; }
 
     /* NAV */
     nav { position: sticky; top: 0; z-index: 100; background: var(--paper); border-bottom: 1px solid var(--rule); padding: 0.85rem 0; }
@@ -91,7 +90,7 @@
     /* PROJECTS */
     .project-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; align-items: stretch; }
     .project-card {
-      background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+      background: var(--card-bg); border: 1px solid var(--rule); border-radius: 3px;
       text-decoration: none; color: inherit; display: flex; flex-direction: column;
       overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s;
     }
@@ -280,9 +279,6 @@
         </div>
         <ul class="contact-list">
           <li><span class="contact-label">Email</span><a href="mailto:thomasellett8@gmail.com">thomasellett8@gmail.com</a></li>
-          <!-- TODO: fill in your real GitHub handle, then uncomment.
-          <li><span class="contact-label">GitHub</span><a href="https://github.com/YOURHANDLE" target="_blank" rel="noopener noreferrer">@YOURHANDLE</a></li>
-          -->
           <li><span class="contact-label">LinkedIn</span><a href="https://www.linkedin.com/in/thomas-ellett-3069b5200/" target="_blank" rel="noopener noreferrer">linkedin.com/in/thomas-ellett</a></li>
         </ul>
       </div>
