@@ -266,7 +266,7 @@
 		Luckily, GPUs have dedicated hardware encoders and decoders as well as CUDA cores that can be used to reduce the time it takes for these 3 stages.
 		This project uses FFmpeg to build all stages of the pipeline and setup the GPU hardware to properly use NVDEC for decoding and NVENC for encoding.
 		For the processing stage, the single threaded effects were converted to custom CUDA kernels.
-		With these 3 changes, a 4K 60FPS 4 minute video with 4 effects applied went from 1.25 hours to under a minute to process.
+		With these 3 changes, a 4K 60FPS ~5 minute video with 4 effects applied went from 1.25 hours to under a minute to process.
 	  </p>
 	  
 	  <p>
