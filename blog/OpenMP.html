@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenMP — Thomas Ellett</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a18;
+      --ink-muted: #5a5a54;
+      --ink-faint: #6e6e66;      /* darkened from #9a9a90 — old value failed WCAG AA on the paper background */
+      --paper: #faf9f6;
+      --paper-tint: #f1f0ec;
+      --rule: #dddbd3;
+      --accent: #2a4fa8;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Source Serif 4', Georgia, serif;
+      --mono: 'DM Mono', 'Courier New', monospace;
+      --code: 'JetBrains Mono', 'Cascadia Code', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+      --max: 720px;
+
+      /* Dark code panel — no syntax highlighting, just a readable surface */
+      --code-bg:        #1e1e22;
+      --code-bg-chrome: #16161a;
+      --code-border:    #2c2c33;
+      --code-text:      #d4d4d4;
+    }
+
+    html { font-size: 18px; }
+    body { font-family: var(--serif); background: var(--paper); color: var(--ink); line-height: 1.75; }
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; background: var(--paper); border-bottom: 1px solid var(--rule); padding: 0.85rem 0; }
+    nav .inner { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .nav-name { font-family: system-ui, -apple-system, sans-serif; font-size: 0.95rem; font-weight: 500; text-decoration: none; color: var(--ink); }
+    .nav-back { font-family: system-ui, -apple-system, sans-serif; font-size: 0.85rem; font-weight: 400; text-decoration: none; color: var(--ink-muted); transition: color 0.15s; display: flex; align-items: center; gap: 0.35rem; }
+    .nav-back:hover { color: var(--accent); }
+
+    /* WRITING HEADER */
+    .article-header { padding: 3.5rem 0 2.5rem; border-bottom: 1px solid var(--rule); }
+    .breadcrumb { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 1rem; }
+    .breadcrumb a { color: var(--ink-faint); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--accent); }
+    h1 { font-family: var(--serif); font-size: 2.2rem; font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 1rem; }
+    .article-meta { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.25rem; }
+    .meta-item { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; color: var(--ink-faint); }
+    .meta-item strong { color: var(--ink-muted); font-weight: 600; display: block; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+
+    /* ESSAY ARTICLE CONTENT */
+    .article-content { padding: 2.5rem 0; }
+    .article-content h2 { font-family: var(--serif); font-size: 1.4rem; font-weight: 400; margin: 2.5rem 0 0.85rem; color: var(--ink); }
+    .article-content h3 { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; margin: 1.75rem 0 0.5rem; color: var(--ink-muted); }
+    .article-content h2:first-child { margin-top: 0; }
+    .article-content p { font-size: 1rem; color: var(--ink-muted); margin-bottom: 1.25rem; line-height: 1.8; text-align: justify; }
+
+    /* Editorial Elements */
+    .article-content ul, .article-content ol { padding-left: 1.5rem; color: var(--ink-muted); font-size: 1rem; line-height: 1.8; margin-bottom: 1.25rem; }
+    .article-content li { margin-bottom: 0.4rem; }
+
+    blockquote { margin: 2rem 0; padding-left: 1.25rem; border-left: 2px solid var(--accent); font-style: italic; color: var(--ink-muted); }
+    blockquote p { text-align: left !important; margin-bottom: 0 !important; }
+
+    /* Inline code in prose / light <pre> (for the citation card) */
+    code { font-family: var(--mono); font-size: 0.82em; background: var(--paper-tint); padding: 0.15rem 0.35rem; border-radius: 3px; color: #569cd6; }
+    pre { background: var(--paper-tint); border: 1px solid var(--rule); padding: 1rem; border-radius: 3px; overflow-x: auto; margin-bottom: 1.5rem; }
+    pre code { background: transparent; padding: 0; color: var(--ink); font-size: 0.78rem; }
+
+    /* IMAGE HANDLING */
+    figure { margin: 2.25rem 0; }
+    img { width: 100%; display: block; border-radius: 3px; border: 1px solid var(--rule); background: var(--paper-tint); }
+    figcaption { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 0.04em; margin-top: 0.65rem; text-align: center; }
+
+    /* CITATION CARD BLOCK */
+    .citation-block { background: var(--paper-tint); border: 1px solid var(--rule); border-radius: 3px; padding: 1.25rem; margin-top: 4rem; }
+    .citation-title { font-family: var(--sans); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); margin-bottom: 0.5rem; }
+    .citation-block pre { margin-bottom: 0; border: none; padding: 0.5rem 0 0; background: transparent; }
+    .citation-block pre code { font-size: 0.72rem; color: var(--ink-muted); }
+
+    /* ============================================================
+       DARK CODE PANEL — no syntax highlighting, just a clean surface
+       Two variants:
+         figure.code-block            -> "file" view (chrome bar)
+         figure.code-block.is-snippet -> "function" view (chrome hidden)
+       ============================================================ */
+    figure.code-block {
+      margin: 1.25rem 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--code-border);
+      box-shadow: 0 8px 30px rgba(20, 20, 30, 0.18);
+      background: var(--code-bg);
+      position: relative;
+    }
+
+    /* Window chrome bar (file variant only) */
+    .code-chrome {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.55rem 0.85rem;
+      background: var(--code-bg-chrome);
+      border-bottom: 1px solid var(--code-border);
+    }
+    .code-dots { display: flex; gap: 0.45rem; }
+    .code-dots span { width: 11px; height: 11px; border-radius: 50%; display: block; }
+    .code-dots span:nth-child(1) { background: #ff5f56; }
+    .code-dots span:nth-child(2) { background: #ffbd2e; }
+    .code-dots span:nth-child(3) { background: #27c93f; }
+    .code-filename { font-family: var(--mono); font-size: 0.74rem; color: #b9b9c4; letter-spacing: 0.02em; }
+
+    .copy-btn {
+      font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.04em;
+      color: #b9b9c4; background: #ffffff10; border: 1px solid var(--code-border);
+      padding: 0.26rem 0.65rem; border-radius: 4px; cursor: pointer; transition: all 0.15s;
+    }
+    .code-chrome .copy-btn { margin-left: auto; }
+    .copy-btn:hover { background: #ffffff1c; color: #fff; }
+    .copy-btn.copied { color: #27c93f; border-color: #27c93f55; }
+
+    /* The code surface itself */
+    figure.code-block pre {
+      margin: 0; padding: 0; border: none; border-radius: 0;
+      overflow-x: auto; background: var(--code-bg);
+    }
+    figure.code-block pre code {
+      display: block;
+      font-family: var(--code);
+      font-size: 0.82rem;
+      line-height: 1.65;
+      padding: 1.1rem 1.4rem;
+      background: transparent;
+      color: var(--code-text);
+      font-variant-ligatures: none;
+      -moz-tab-size: 4; tab-size: 4;
+    }
+
+    /* Scrollbar */
+    figure.code-block pre::-webkit-scrollbar { height: 10px; }
+    figure.code-block pre::-webkit-scrollbar-track { background: var(--code-bg-chrome); }
+    figure.code-block pre::-webkit-scrollbar-thumb { background: #3a3a44; border-radius: 5px; }
+    figure.code-block pre::-webkit-scrollbar-thumb:hover { background: #4a4a55; }
+
+    /* ---- SNIPPET VARIANT: no chrome, floating copy button ---- */
+    figure.code-block.is-snippet { box-shadow: 0 4px 18px rgba(20, 20, 30, 0.14); }
+    figure.code-block.is-snippet .code-chrome { display: none; }
+    figure.code-block.is-snippet pre code { padding: 1.9rem 1.4rem 1.2rem; }
+    figure.code-block.is-snippet .copy-float {
+      position: absolute; top: 0.55rem; right: 0.6rem; z-index: 2;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    figure.code-block.is-snippet:hover .copy-float,
+    figure.code-block.is-snippet .copy-float:focus { opacity: 1; }
+    /* Touch devices don't hover — always show the copy button on those. */
+    @media (hover: none) {
+      figure.code-block.is-snippet .copy-float { opacity: 1; }
+    }
+
+    /* FOOTER */
+    footer { padding: 2rem 0; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+    footer p { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.06em; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+      .article-content p { text-align: left; }
+      figure.code-block.is-snippet .copy-float { opacity: 1; } /* always show on touch */
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="inner">
+      <a class="nav-name" href="../index.html">Thomas Ellett</a>
+      <a class="nav-back" href="../index.html#writing">← Writing</a>
+    </div>
+  </nav>
+
+  <!-- ═════════ MAIN ARTICLE ═════════ -->
+  <main class="container">
+
+    <!-- Article header -->
+    <header class="article-header">
+      <p class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#writing">Writing</a> / OpenMP for Parallelization Notes</p>
+      <h1>OpenMP for Parallelization Notes</h1>
+
+      <p style="font-size: 1.05rem; color: var(--ink-muted); margin-top: 0.5rem; max-width: 580px; font-style: italic;">
+        My notes on what is OpenMP and how to use it.
+      </p>
+
+      <div class="article-meta">
+        <div class="meta-item"><strong>Reading Time</strong>5 Min Read</div>
+        <div class="meta-item"><strong>Topic</strong>Parallelization</div>
+      </div>
+    </header>
+
+    <!-- Article body -->
+    <div class="article-content">
+
+    <h2>Introduction</h2>
+      <p>
+		OpenMP is an API that lets you turn sections of your single threaded C, C++, or Fortran code into multi-threaded code.
+		By using this API, you don't have to start any threads and you just annotate in the code where the work begins.
+		All threads on OpenMP have access to the same shared memory pool, so computation between machines isn't possible.
+		There is a solution though by using the Message Passing Interface (MPI) which can start separate processes with their own memory and pass data between processes.
+		These notes will only cover OpenMP, but just know that OpenMP and MPI are fundamental pieces to high performance compute.
+      </p>
+	  
+	<h2>OpenMP Basics</h2>
+	  <p>
+		Everything in OpenMP starts with #pragma omp and the basic format is #pragma omp directive(s) clause(s). 
+		You can combine directives together, but only specific combinations will work.
+		Clauses can be combined as well as long as the directive accepts the clause.
+		The following are commonly used examples with a description.
+	  </p>
+	  
+	  <ul>
+        <li><strong>#pragma omp parallel:</strong> Marks the section of code where every thread executes that code in parallel.</li>
+        <li><strong>#pragma omp parallel for:</strong> Marks a for loop whose iterations are distributed across threads.</li>
+        <li><strong>#pragma omp critical [(name)]:</strong> Blocks entire chunks of code for safely updating shared data by making other threads wait until the data is free. Name is used to identify critical regions and unnamed regions are one global lock.</li>
+		<li><strong>#pragma omp atomic:</strong> A lightweight alternative to critical that protects a single memory location rather than a block of code. It utilizes hardware-level instructions to ensure a single read, write, or update operation happens indivisibly without software locking overhead.</li>
+		<li><strong>#pragma omp barrier:</strong> Every thread will wait at this mark then move forward together.</li>
+		<li><strong>#pragma omp single:</strong> Only one thread will run this block and other threads wait for it to finish</li>
+      </ul>
+	  
+	  <p>
+		There are a bunch more directives, but let's move on to clauses.
+	  </p>
+	  
+	  <ul>
+        <li><strong>if(expression):</strong> When evaluated to true then it will run in parallel and false will be serial.</li>
+        <li><strong>num_threads(num):</strong> Sets the number of threads to run, overriding the default.</li>
+		<li><strong>schedule():</strong> Specify how loop iterations are divided among threads (dynamic, guided, runtime, or static).</li>
+        <li><strong>nowait:</strong> Implicit barriers from things like #pragma omp for are now skipped with this.</li>
+		<li><strong>private(variable):</strong> Thread gets its own copy of this variable, but variable is uninitialized.</li>
+		<li><strong>firstprivate(variable):</strong> Same as private, but the variable is initialized with the value before the region.</li>
+		<li><strong>lastprivate(variable):</strong> Same as private, but the thread that executes the final sequential iteration of a loop copies its local value back to the original variable outside the region.</li>
+		<li><strong>shared(variable):</strong> Specifies one or more variables shared among all threads.</li>
+		<li><strong>reduction(operation : variable):</strong> Each thread will get a private copy of variable and combine at the end with the operation.</li>
+      </ul>
+	  
+	  <p>
+		These are just my notes on them, but more details can be found at these links.
+	  </p>
+	  
+	  <ul>
+        <li><a href="https://learn.microsoft.com/en-us/cpp/parallel/openmp/openmp-in-visual-cpp?view=msvc-170">Microsoft — OpenMP in Visual C++</a></li>
+        <li><a href="https://github-pages.ucl.ac.uk/research-computing-with-cpp/08openmp/02_intro_openmp.html">UCL — OpenMP</a></li>
+      </ul>
+	  
+	  
+	<h2>Code Examples </h2>
+	  <p>
+		These are just some simple code examples.
+		Let's start with a basic hello world, but for all of our threads.
+	  </p>
+
+    <figure class="code-block">
+	  <div class="code-chrome">
+		<div class="code-dots"><span></span><span></span><span></span></div>
+		<span class="code-filename">helloWorld.cpp</span>
+		<button class="copy-btn" type="button">Copy</button>
+	  </div>
+<pre><code>#include &lt;omp.h&gt;
+#include &lt;iostream&gt;
+
+int main()
+{
+	#pragma omp parallel
+	{
+		int id = omp_get_thread_num();
+		int n  = omp_get_num_threads();
+		#pragma omp critical
+		std::cout &lt;&lt; "Hello from thread " &lt;&lt; id &lt;&lt; " of " &lt;&lt; n &lt;&lt; "\n";
+	}
+	return 0;
+}</code></pre>
+	</figure>
+	
+    <figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button> 
+<pre><code>Hello from thread 5 of 28
+Hello from thread 12 of 28
+Hello from thread 19 of 28
+Hello from thread 15 of 28
+...</code></pre>
+    </figure>	
+	
+	  <p>
+		Remember that all your threads will be running this code, but if all threads are printing at the same time then your std::cout will be scrambled.
+		To fix that you must use #pragma omp critical to make all threads wait until it is their turn.
+	  </p>
+	  
+	  <p>
+		Let's do another example where it is a simple sum of all values inside a vector.
+	  </p>
+	  	<figure class="code-block">
+	  <div class="code-chrome">
+		<div class="code-dots"><span></span><span></span><span></span></div>
+		<span class="code-filename">sum.cpp</span>
+		<button class="copy-btn" type="button">Copy</button>
+	  </div>
+<pre><code>#include &lt;omp.h&gt;
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+int main()
+{
+    constexpr int n = 1000;
+    std::vector&lt;int&gt; values(n);
+    for (int i = 0; i &lt; n; ++i)
+	{
+        values[i] = i + 1;
+	}
+
+    long long sum = 0;
+
+    #pragma omp parallel for reduction(+:sum)
+    for (int i = 0; i &lt; n; ++i)
+	{
+        sum += values[i];  // each thread sums its own slice privately
+	}
+
+    std::cout &lt;&lt; "Sum = " &lt;&lt; sum &lt;&lt; "\n";
+    return 0;
+}</code></pre>
+    </figure>
+	
+	<figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button> 
+	  <pre><code>Sum = 500500</code></pre>
+	
+	</figure>
+	  <p>
+		Here is a more complex example where given a 2D array, we must rotate it by 90 degrees.
+	  </p>
+	  
+	<figure class="code-block">
+	  <div class="code-chrome">
+		<div class="code-dots"><span></span><span></span><span></span></div>
+		<span class="code-filename">rotate.cpp</span>
+		<button class="copy-btn" type="button">Copy</button>
+	  </div>
+<pre><code>#include &lt;omp.h&gt;
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+int main()
+{
+	//Create 2D array of m x m size.
+	constexpr int m = 4;
+	std::vector&lt;std::vector&lt;int&gt;&gt; input(m, std::vector&lt;int&gt;(m));
+	std::vector&lt;std::vector&lt;int&gt;&gt; inputRotated(m, std::vector&lt;int&gt;(m));
+
+	//Generate basic input
+	for (int row = 0; row &lt; m; ++row)
+	{
+		for (int col = 0; col &lt; m; ++col)
+		{
+			input[row][col] = row * m + col + 1;
+			std::cout &lt;&lt; input[row][col] &lt;&lt; " ";
+		}
+		std::cout &lt;&lt; "\n";
+	}
+
+	//90 degree rotation
+#pragma omp parallel for
+	for (int row = 0; row &lt; m; ++row) //Each thread will grab a chunk of rows to compute the value
+	{
+		for (int col = 0; col &lt; m; ++col)
+		{
+			inputRotated[row][col] = input[m - 1 - col][row];
+		}
+	}
+
+	// print sequentially since it is outside of region
+	for (const auto&amp; row : inputRotated)
+	{
+		for (const auto&amp; number : row)
+		{
+			std::cout &lt;&lt; number &lt;&lt; " ";
+		}
+		std::cout &lt;&lt; "\n";
+	}
+	return 0;
+}</code></pre>
+	</figure>
+	
+    <figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button> 
+<pre><code>1 2 3 4
+5 6 7 8
+9 10 11 12
+13 14 15 16
+
+13 9 5 1
+14 10 6 2
+15 11 7 3
+16 12 8 4</code></pre>
+    </figure>		
+	 
+	  <p>
+		Rotating an array with multiple threads doesn't make sense for an array this small.
+		When the array size is massive though, then parallel processing greatly reduces the compute time.
+	  </p>
+	  
+	  <p>
+		The last example is one where we need to protect shared data.
+		Let's make a simple histogram and show how we need to protect the histogram bins.
+	  </p>
+	  
+	<figure class="code-block">
+	  <div class="code-chrome">
+		<div class="code-dots"><span></span><span></span><span></span></div>
+		<span class="code-filename">histogram.cpp</span>
+		<button class="copy-btn" type="button">Copy</button>
+	  </div>
+<pre><code>#include &lt;omp.h&gt;
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+int main() {
+    constexpr int n = 1000;
+    std::vector&lt;int&gt; data(n);
+    for (int i = 0; i &lt; n; ++i)
+	{
+        data[i] = i % 10;                   // values 0..9, each appears 100 times
+	}
+
+    std::vector&lt;int&gt; hist(10, 0);           // shared histogram
+
+    #pragma omp parallel for
+    for (int i = 0; i &lt; n; ++i)
+	{
+        #pragma omp atomic
+        hist[data[i]]++;                    // threads may hit the same bin -> protect it
+    }
+
+    for (int b = 0; b &lt; 10; ++b)
+	{
+        std::cout &lt;&lt; "bin " &lt;&lt; b &lt;&lt; ": " &lt;&lt; hist[b] &lt;&lt; "\n";
+	}
+    return 0;
+}</code></pre>
+	</figure>
+	
+	
+	<figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button> 
+<pre><code>bin 0: 100
+bin 1: 100
+bin 2: 100
+bin 3: 100
+bin 4: 100
+bin 5: 100
+bin 6: 100
+bin 7: 100
+bin 8: 100
+bin 9: 100</code></pre>
+    </figure>
+	
+	<p>
+	  Without the #pragma omp atomic, there would be a lot of miscounted bins.
+	</p>
+
+    </div>
+  </main>
+
+  <!-- ═════════ FOOTER ═════════ -->
+  <footer class="container">
+    <p>© 2026 Thomas Ellett</p>
+    <p><a href="../index.html">← Back to home</a></p>
+  </footer>
+
+  <!-- Copy-to-clipboard for code blocks -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('figure.code-block .copy-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const code = btn.closest('figure').querySelector('code');
+          try {
+            await navigator.clipboard.writeText(code.textContent);
+            btn.textContent = 'Copied';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1600);
+          } catch (e) {
+            btn.textContent = 'Ctrl+C';
+            setTimeout(() => { btn.textContent = 'Copy'; }, 1600);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

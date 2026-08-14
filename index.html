@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Thomas Ellett — Software Engineer</title>
+  <meta name="description" content="Software engineer working on GPU acceleration, distributed systems, and video and image processing. Projects, notes, and technical writing." />
+
+  <!-- Social sharing. Set the URLs to your real domain once you deploy. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Thomas Ellett — Software Engineer" />
+  <meta property="og:description" content="Software engineer working on GPU acceleration, distributed systems, and video and image processing. Projects, notes, and technical writing." />
+  <meta property="og:image" content="https://example.com/images/headshot.jpg" />
+  <meta property="og:url" content="https://example.com/" />
+  <meta name="twitter:card" content="summary" />
+
+  <!-- Inline SVG favicon: no extra file to manage. -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23faf9f6'/><text x='16' y='23' font-family='Georgia,serif' font-size='19' text-anchor='middle' fill='%231a1a18'>TE</text></svg>" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+
+  <style>
+    /* GLOBAL RESET & VARIABLES */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a18;
+      --ink-muted: #5a5a54;
+      --ink-faint: #6e6e66;      /* darkened from #9a9a90 — old value was 2.7:1, failed WCAG AA */
+      --paper: #faf9f6;
+      --paper-tint: #f1f0ec;
+      --rule: #dddbd3;
+      --accent: #2a4fa8;
+
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Source Serif 4', Georgia, serif;
+      --mono: 'DM Mono', 'Courier New', monospace;
+
+      --max: 800px;
+    }
+
+    html { font-size: 18px; scroll-behavior: smooth; }
+    body { font-family: var(--serif); background: var(--paper); color: var(--ink); line-height: 1.75; }
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; }
+
+    /* Visible keyboard focus everywhere. */
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+    /* TYPOGRAPHY & SECTIONS */
+    h1 { font-family: var(--serif); font-size: 2.4rem; font-weight: 400; line-height: 1.15; letter-spacing: -0.01em; margin-bottom: 1rem; }
+    h2 { font-family: var(--serif); font-size: 1.5rem; font-weight: 400; letter-spacing: -0.01em; }
+    section { padding: 3.5rem 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 5rem; }
+    section:last-of-type { border-bottom: none; }
+    .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.25rem; }
+    .section-num { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.1em; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; background: var(--paper); border-bottom: 1px solid var(--rule); padding: 0.85rem 0; }
+    nav .inner { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .nav-name { font-family: system-ui, -apple-system, sans-serif; font-size: 0.95rem; font-weight: 500; text-decoration: none; color: var(--ink); }
+    .nav-links { display: flex; gap: 1.75rem; list-style: none; }
+    .nav-links a { font-family: system-ui, -apple-system, sans-serif; font-size: 0.85rem; font-weight: 400; text-decoration: none; color: var(--ink-muted); transition: color 0.15s; }
+    .nav-links a:hover { color: var(--accent); }
+
+    /* HERO */
+    .hero { padding: 5rem 0 4rem; border-bottom: 1px solid var(--rule); }
+    .hero-grid { display: grid; grid-template-columns: 1fr auto; gap: 2.5rem; align-items: start; }
+    .hero-bio { font-size: 0.95rem; color: var(--ink-muted); max-width: 550px; margin-bottom: 1rem; }
+    .hero-links { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-top: 1.75rem; }
+    .avatar {
+      width: 180px; height: 180px; border-radius: 50%;
+      object-fit: cover;                     /* without this a non-square headshot gets squashed */
+      background: var(--paper-tint); border: 1px solid var(--rule); flex-shrink: 0;
+    }
+
+    /* BUTTONS */
+    .btn {
+      font-family: var(--sans); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em;
+      text-decoration: none; padding: 0.55rem 1.25rem; border-radius: 2px;
+      transition: background-color 0.15s, border-color 0.15s;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+    }
+    .btn-primary { background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+    .btn-primary:hover { background: #1e3d8a; }
+    .btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+    .btn-outline:hover { border-color: var(--ink-muted); }
+
+    /* PROJECTS */
+    .project-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; align-items: stretch; }
+    .project-card {
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+      text-decoration: none; color: inherit; display: flex; flex-direction: column;
+      overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .project-card:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(42,79,168,0.08); }
+    .project-thumb { width: 100%; height: 160px; object-fit: cover; background: var(--paper-tint); border-bottom: 1px solid var(--rule); display: block; }
+    .project-body { padding: 1.2rem 1.4rem 1.4rem; flex-grow: 1; display: flex; flex-direction: column; }
+    .project-body h3 { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .project-body p { font-size: 0.88rem; color: var(--ink-muted); line-height: 1.6; margin-bottom: 1rem; }
+    .project-footer { margin-top: auto; padding-top: 0.85rem; border-top: 1px solid var(--paper-tint); display: flex; justify-content: space-between; align-items: center; }
+    .project-cta { font-family: var(--sans); font-size: 0.75rem; font-weight: 600; color: var(--accent); }
+    .status { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .status-active { color: #2d7a4f; }
+    .status-done { color: var(--ink-faint); }
+
+    /* WRITING — no fixed heights; long titles used to clip their own excerpt */
+    .blog-list { list-style: none; }
+    .blog-item { display: grid; grid-template-columns: 6rem 1fr; gap: 1.5rem; padding: 1.25rem 0; border-bottom: 1px solid var(--paper-tint); align-items: baseline; }
+    .blog-item:last-child { border-bottom: none; }
+    .blog-date { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.04em; }
+    .blog-item h3 { font-size: 1.05rem; font-weight: 400; line-height: 1.35; }
+    .blog-title { font-family: var(--serif); text-decoration: none; color: var(--ink); transition: color 0.15s; }
+    .blog-title:hover { color: var(--accent); }
+    .blog-excerpt { font-size: 0.88rem; color: var(--ink-muted); margin-top: 0.2rem; line-height: 1.6; }
+
+    /* CONTACT & FOOTER */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+    .contact-grid p { font-size: 0.95rem; color: var(--ink-muted); }
+    .contact-list { list-style: none; }
+    .contact-list li { display: flex; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--paper-tint); font-size: 0.9rem; }
+    .contact-list li:last-child { border-bottom: none; }
+    .contact-label { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); min-width: 5rem; }
+    .contact-list a { color: var(--accent); text-decoration: none; }
+    .contact-list a:hover { text-decoration: underline; }
+    footer { padding: 2rem 0; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+    footer p { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.06em; }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      html { font-size: 17px; }
+      h1 { font-size: 1.9rem; }
+      .hero { padding: 3rem 0 2.5rem; }
+      .hero-grid, .project-grid, .contact-grid { grid-template-columns: 1fr; }
+      .avatar { width: 90px; height: 90px; order: -1; }
+      .nav-links { gap: 1rem; }
+      .blog-item { grid-template-columns: 1fr; gap: 0.25rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      * { transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="inner">
+      <a class="nav-name" href="#top">Thomas Ellett</a>
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#writing">Writing</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container" id="top">
+
+    <section class="hero" id="about">
+      <div class="hero-grid">
+        <div>
+          <h1>Thomas Ellett</h1>
+          <p class="hero-bio">
+            I'm a software engineer with a double bachelor's in Electrical Engineering and Computer
+            Science from the University of Washington. I find great joy in learning, and for the past
+            few years I've been studying how to scale systems for millions of users, push performance
+            with CPU multithreading and GPU hardware acceleration, and apply filters/effects to videos or images.
+            What I've learned has found its way into both my software engineering job and the
+            personal projects I build.
+          </p>
+          <p class="hero-bio">
+            This site is new, but over time it will become a place where I share my notes and
+            research, documentation of new findings, technical guides, and the projects I've built.
+            I share this work both to document what I'm learning and to give something back to
+            people exploring the same ideas.
+          </p>
+          <div class="hero-links">
+            <a class="btn btn-primary" href="mailto:thomasellett8@gmail.com">Email me</a>
+            <a class="btn btn-outline" href="https://www.linkedin.com/in/thomas-ellett-3069b5200/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          </div>
+        </div>
+        <img class="avatar" src="images/headshot.jpg" alt="Thomas Ellett" width="180" height="180" />
+      </div>
+    </section>
+
+    <section id="projects">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2>Projects</h2>
+      </div>
+      <div class="project-grid">
+
+        <a class="project-card" href="projects/vhsprocess.html">
+          <img class="project-thumb" src="images/projectImages/VHSProject/thumbnail.png" alt="Video frame with VHS tape artifacts applied" loading="lazy" />
+          <div class="project-body">
+            <h3>AWS Cloud Video Processing</h3>
+            <p>Built AWS infrastructure to decode, process, and encode video on NVIDIA GPU instances.</p>
+            <div class="project-footer">
+              <span class="project-cta">View project →</span>
+              <span class="status status-done">Completed 2026</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="project-card" href="projects/speechrecognition.html">
+          <img class="project-thumb" src="images/projectImages/SpeechRecognition/SpeechRecognitionF1.png" alt="Power spectral density plot comparing spoken yes and no" loading="lazy" />
+          <div class="project-body">
+            <h3>Speech Recognition</h3>
+            <p>Keyword detection using only the frequency characteristics of the spoken words.</p>
+            <div class="project-footer">
+              <span class="project-cta">View project →</span>
+              <span class="status status-done">Completed 2021</span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <section id="writing">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2>Writing</h2>
+      </div>
+
+      <ul class="blog-list">
+
+        <li class="blog-item">
+          <span class="blog-date">November 2025</span>
+          <div>
+            <h3><a class="blog-title" href="blog/NVIDIANsightSuiteIntro.html">An Introduction to Optimization Techniques and Analysis with NVIDIA Nsight</a></h3>
+            <p class="blog-excerpt">Optimizing a CUDA kernel and using NVIDIA Nsight Systems for performance analysis.</p>
+          </div>
+        </li>
+
+        <li class="blog-item">
+          <span class="blog-date">September 2025</span>
+          <div>
+            <h3><a class="blog-title" href="blog/OpenMP.html">OpenMP for Parallelization</a></h3>
+            <p class="blog-excerpt">My notes on what OpenMP is and how to use it.</p>
+          </div>
+        </li>
+
+        <li class="blog-item">
+          <span class="blog-date">May 2025</span>
+          <div>
+            <h3><a class="blog-title" href="blog/AWSNotes.html">Passing the AWS Associate Solutions Architect Exam</a></h3>
+            <p class="blog-excerpt">All the notes and subjects I covered to pass the AWS Associate Solutions Architect exam.</p>
+          </div>
+        </li>
+
+        <li class="blog-item">
+          <span class="blog-date">July 2023</span>
+          <div>
+            <h3><a class="blog-title" href="blog/MelFrequencyCepstralCoefficients.html">Mel Spectrogram and Mel-Frequency Cepstral Coefficients</a></h3>
+            <p class="blog-excerpt">My notes on Mel spectrograms and MFCCs.</p>
+          </div>
+        </li>
+
+      </ul>
+    </section>
+
+    <section id="contact">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2>Contact</h2>
+      </div>
+      <div class="contact-grid">
+        <div>
+          <p>
+            Thanks for taking the time to learn about me and my interests. I'm happy to discuss my
+            writing in depth, answer questions about a project, or just say hello. Email is the best
+            way to reach me.
+          </p>
+        </div>
+        <ul class="contact-list">
+          <li><span class="contact-label">Email</span><a href="mailto:thomasellett8@gmail.com">thomasellett8@gmail.com</a></li>
+          <!-- TODO: fill in your real GitHub handle, then uncomment.
+          <li><span class="contact-label">GitHub</span><a href="https://github.com/YOURHANDLE" target="_blank" rel="noopener noreferrer">@YOURHANDLE</a></li>
+          -->
+          <li><span class="contact-label">LinkedIn</span><a href="https://www.linkedin.com/in/thomas-ellett-3069b5200/" target="_blank" rel="noopener noreferrer">linkedin.com/in/thomas-ellett</a></li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="container">
+    <p>© 2026 Thomas Ellett</p>
+    <p>Last updated: August 2026</p>
+  </footer>
+
+</body>
+</html>

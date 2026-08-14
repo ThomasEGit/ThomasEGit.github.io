@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optimization Techniques — Thomas Ellett</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a18;
+      --ink-muted: #5a5a54;
+      --ink-faint: #6e6e66;      /* darkened from #9a9a90 — old value failed WCAG AA on the paper background */
+      --paper: #faf9f6;
+      --paper-tint: #f1f0ec;
+      --rule: #dddbd3;
+      --accent: #2a4fa8;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Source Serif 4', Georgia, serif;
+      --mono: 'DM Mono', 'Courier New', monospace;
+      --code: 'JetBrains Mono', 'Cascadia Code', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+      --max: 720px;
+
+      /* Dark code panel — no syntax highlighting, just a readable surface */
+      --code-bg:        #1e1e22;
+      --code-bg-chrome: #16161a;
+      --code-border:    #2c2c33;
+      --code-text:      #d4d4d4;
+    }
+
+    html { font-size: 18px; }
+    body { font-family: var(--serif); background: var(--paper); color: var(--ink); line-height: 1.75; }
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; background: var(--paper); border-bottom: 1px solid var(--rule); padding: 0.85rem 0; }
+    nav .inner { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .nav-name { font-family: system-ui, -apple-system, sans-serif; font-size: 0.95rem; font-weight: 500; text-decoration: none; color: var(--ink); }
+    .nav-back { font-family: system-ui, -apple-system, sans-serif; font-size: 0.85rem; font-weight: 400; text-decoration: none; color: var(--ink-muted); transition: color 0.15s; display: flex; align-items: center; gap: 0.35rem; }
+    .nav-back:hover { color: var(--accent); }
+
+    /* WRITING HEADER */
+    .article-header { padding: 3.5rem 0 2.5rem; border-bottom: 1px solid var(--rule); }
+    .breadcrumb { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 1rem; }
+    .breadcrumb a { color: var(--ink-faint); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--accent); }
+    h1 { font-family: var(--serif); font-size: 2.2rem; font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 1rem; }
+    .article-meta { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.25rem; }
+    .meta-item { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; color: var(--ink-faint); }
+    .meta-item strong { color: var(--ink-muted); font-weight: 600; display: block; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+
+    /* ESSAY ARTICLE CONTENT */
+    .article-content { padding: 2.5rem 0; }
+    .article-content h2 { font-family: var(--serif); font-size: 1.4rem; font-weight: 400; margin: 2.5rem 0 0.85rem; color: var(--ink); }
+    .article-content h3 { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; margin: 1.75rem 0 0.5rem; color: var(--ink-muted); }
+    .article-content h2:first-child { margin-top: 0; }
+    .article-content p { font-size: 1rem; color: var(--ink-muted); margin-bottom: 1.25rem; line-height: 1.8; text-align: justify; }
+
+    /* Editorial Elements */
+    .article-content ul, .article-content ol { padding-left: 1.5rem; color: var(--ink-muted); font-size: 1rem; line-height: 1.8; margin-bottom: 1.25rem; }
+    .article-content li { margin-bottom: 0.4rem; }
+
+    blockquote { margin: 2rem 0; padding-left: 1.25rem; border-left: 2px solid var(--accent); font-style: italic; color: var(--ink-muted); }
+    blockquote p { text-align: left !important; margin-bottom: 0 !important; }
+
+    /* Inline code in prose / light <pre> (for the citation card) */
+    code { font-family: var(--mono); font-size: 0.82em; background: var(--paper-tint); padding: 0.15rem 0.35rem; border-radius: 3px; color: #569cd6; }
+    pre { background: var(--paper-tint); border: 1px solid var(--rule); padding: 1rem; border-radius: 3px; overflow-x: auto; margin-bottom: 1.5rem; }
+    pre code { background: transparent; padding: 0; color: var(--ink); font-size: 0.78rem; }
+
+    /* IMAGE HANDLING */
+    figure { margin: 2.25rem 0; }
+    img { width: 100%; display: block; border-radius: 3px; border: 1px solid var(--rule); background: var(--paper-tint); }
+    figcaption { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 0.04em; margin-top: 0.65rem; text-align: center; }
+
+    /* CITATION CARD BLOCK */
+    .citation-block { background: var(--paper-tint); border: 1px solid var(--rule); border-radius: 3px; padding: 1.25rem; margin-top: 4rem; }
+    .citation-title { font-family: var(--sans); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); margin-bottom: 0.5rem; }
+    .citation-block pre { margin-bottom: 0; border: none; padding: 0.5rem 0 0; background: transparent; }
+    .citation-block pre code { font-size: 0.72rem; color: var(--ink-muted); }
+
+    /* ============================================================
+       DARK CODE PANEL — no syntax highlighting, just a clean surface
+       Two variants:
+         figure.code-block            -> "file" view (chrome bar)
+         figure.code-block.is-snippet -> "function" view (chrome hidden)
+       ============================================================ */
+    figure.code-block {
+      margin: 1.25rem 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--code-border);
+      box-shadow: 0 8px 30px rgba(20, 20, 30, 0.18);
+      background: var(--code-bg);
+      position: relative;
+    }
+
+    /* Window chrome bar (file variant only) */
+    .code-chrome {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.55rem 0.85rem;
+      background: var(--code-bg-chrome);
+      border-bottom: 1px solid var(--code-border);
+    }
+    .code-dots { display: flex; gap: 0.45rem; }
+    .code-dots span { width: 11px; height: 11px; border-radius: 50%; display: block; }
+    .code-dots span:nth-child(1) { background: #ff5f56; }
+    .code-dots span:nth-child(2) { background: #ffbd2e; }
+    .code-dots span:nth-child(3) { background: #27c93f; }
+    .code-filename { font-family: var(--mono); font-size: 0.74rem; color: #b9b9c4; letter-spacing: 0.02em; }
+
+    .copy-btn {
+      font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.04em;
+      color: #b9b9c4; background: #ffffff10; border: 1px solid var(--code-border);
+      padding: 0.26rem 0.65rem; border-radius: 4px; cursor: pointer; transition: all 0.15s;
+    }
+    .code-chrome .copy-btn { margin-left: auto; }
+    .copy-btn:hover { background: #ffffff1c; color: #fff; }
+    .copy-btn.copied { color: #27c93f; border-color: #27c93f55; }
+
+    /* The code surface itself */
+    figure.code-block pre {
+      margin: 0; padding: 0; border: none; border-radius: 0;
+      overflow-x: auto; background: var(--code-bg);
+    }
+    figure.code-block pre code {
+      display: block;
+      font-family: var(--code);
+      font-size: 0.82rem;
+      line-height: 1.65;
+      padding: 1.1rem 1.4rem;
+      background: transparent;
+      color: var(--code-text);
+      font-variant-ligatures: none;
+      -moz-tab-size: 4; tab-size: 4;
+    }
+
+    /* Scrollbar */
+    figure.code-block pre::-webkit-scrollbar { height: 10px; }
+    figure.code-block pre::-webkit-scrollbar-track { background: var(--code-bg-chrome); }
+    figure.code-block pre::-webkit-scrollbar-thumb { background: #3a3a44; border-radius: 5px; }
+    figure.code-block pre::-webkit-scrollbar-thumb:hover { background: #4a4a55; }
+
+    /* ---- SNIPPET VARIANT: no chrome, floating copy button ---- */
+    figure.code-block.is-snippet { box-shadow: 0 4px 18px rgba(20, 20, 30, 0.14); }
+    figure.code-block.is-snippet .code-chrome { display: none; }
+    figure.code-block.is-snippet pre code { padding: 1.9rem 1.4rem 1.2rem; }
+    figure.code-block.is-snippet .copy-float {
+      position: absolute; top: 0.55rem; right: 0.6rem; z-index: 2;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    figure.code-block.is-snippet:hover .copy-float,
+    figure.code-block.is-snippet .copy-float:focus { opacity: 1; }
+    /* Touch devices don't hover — always show the copy button on those. */
+    @media (hover: none) {
+      figure.code-block.is-snippet .copy-float { opacity: 1; }
+    }
+
+    /* FOOTER */
+    footer { padding: 2rem 0; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+    footer p { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.06em; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+      .article-content p { text-align: left; }
+      figure.code-block.is-snippet .copy-float { opacity: 1; } /* always show on touch */
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="inner">
+      <a class="nav-name" href="../index.html">Thomas Ellett</a>
+      <a class="nav-back" href="../index.html#writing">← Writing</a>
+    </div>
+  </nav>
+
+  <!-- ═════════ MAIN ARTICLE ═════════ -->
+  <main class="container">
+
+    <!-- Article header -->
+    <header class="article-header">
+      <p class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#writing">Writing</a> / An Introduction to Optimization Techniques and Analysis with NVIDIA Nsight</p>
+      <h1>An Introduction to Optimization Techniques and Analysis with NVIDIA Nsight</h1>
+
+      <p style="font-size: 1.05rem; color: var(--ink-muted); margin-top: 0.5rem; max-width: 580px; font-style: italic;">
+        A simple introduction to optimizing a kernel and using NVIDIA Nsight Systems for performance analysis.
+      </p>
+
+      <div class="article-meta">
+        <div class="meta-item"><strong>Reading Time</strong>15 Min Read</div>
+        <div class="meta-item"><strong>Topic</strong>CUDA</div>
+      </div>
+    </header>
+
+    <!-- Article body -->
+    <div class="article-content">
+
+    <h2>Introduction</h2>
+      <p>
+        NVIDIA has a whole suite of tools that can be used for debugging, profiling, and optimizing.
+        These notes will specifically focus on how to use Nsight Systems for a simple C++ application.
+        Nsight Systems shows you how the CPU and GPU spend their time relative to each other, memory transfer times between host and device, PCIe throughput, and much more.
+        The C++ application is a simple box blur filter on a 4160 by 4160 pixel image that will progressively get faster as we optimize.
+		These notes don't explain all possible ways to optimize an application, but introduce tools to help with profiling and highlight questions that can be asked to help optimize an application.
+      </p>
+	  
+	<h2>Nsight Systems</h2>
+	  <p>
+		Nsight Systems allows for profiling of an application on the local host, through USB connection, or even through SSH connection. 
+		After a target is set for profiling, Nsight Systems will ask for admin privileges to access CPU and GPU counters.
+		Once setup is complete, find the target application to run and also include the necessary arguments.
+		For the example used in this post, it is just a simple .exe and the folder that holds the images for processing.
+		Nsight Systems offers a lot of different traces to collect data from and below is a short description about the traces we are interested in:
+	  </p>
+	  
+	  <ul>
+        <li><strong>CUDA Trace:</strong> Captures CUDA API function calls, memory copies between host and device, and kernel information such as execution time and duration</li>
+        <li><strong>GPU Context Switch Trace:</strong> Helps determine the specific process that is using the GPU.</li>
+        <li><strong>GPU Metrics:</strong> Collects data on GPU state, SM states, SM warp occupancy, PCI data, and more.</li>
+		<li><strong>NVTX Trace:</strong> Used by developers to add custom markers in code which can mark sections of code or functions.</li>
+      </ul>
+	  
+	  <p>
+		With the target application set and traces selected, we can start profiling manually, within a time range, within frames, or with a hotkey to start and stop.
+		What is most important to remember is that the system will log activities that occur in nanoseconds which means a lot of data can be captured even within 30 seconds.
+		When profiling, try to be precise about what data is being captured to limit the amount of unnecessary or unrelated data.
+	  </p>
+
+    <h2>Multipass Box Blur Filter</h2>
+      <p>
+        This filter works by going through and changing the value of each pixel to the average value of that pixel's neighbors.
+        How many neighbors are considered in the average is determined by an amount (radius) that is set.
+        The blur intensity is determined by how many blur operations are done on the image.
+        It is important to note that a Gaussian blur can be used instead and yields smoother results, but a box blur filter was used for the following reasons:
+      </p>
+
+      <ul>
+        <li><strong>Simplicity:</strong> It is an easy algorithm to understand and doesn't detract from the main focus.</li>
+        <li><strong>Profiling:</strong> Much cleaner to profile since reapplying the filter is a constant workload.</li>
+        <li><strong>Quality:</strong> After 3 applications of the box blur, it is visually similar to Gaussian blur.</li>
+      </ul>
+	  
+    <h2>CPU Single Threaded Approach</h2>
+      <p>
+        In a single threaded solution, the system must go through each pixel of input and find the average pixel value of its neighbors.
+        Once all the values within the radius are averaged, the output at that pixel is modified.
+		This operation will be repeated depending on how many passes were given to the function.
+        See code below.
+      </p>
+
+    <figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button> <pre><code>static void cpuSingleThreadBlur(const unsigned char* input,
+    unsigned char* output, const int width, const int height,
+    const int radius, int passes = 3)
+{
+    const int totalPixels = (radius * 2 + 1) * (radius * 2 + 1);
+    const size_t imageSize = (size_t)width * height;
+
+    std::vector&lt;unsigned char&gt; bufferA(input, input + imageSize);
+    std::vector&lt;unsigned char&gt; bufferB(imageSize);
+
+	//If a pixel were to be blurred then that blurred pixel
+    //would be counted as a neighbor for future pixels.
+	//We want only to count the original neighbors.
+    unsigned char* src = bufferA.data();
+    unsigned char* dst = bufferB.data();
+
+    for (int pass = 1; pass &lt;= passes; pass++)
+    {
+        for (int row = 0; row &lt; height; row++)
+        {
+            for (int col = 0; col &lt; width; col++)
+            {
+                int sum = 0;
+                for (int i = -radius; i &lt;= radius; i++)
+                {
+                    for (int j = -radius; j &lt;= radius; j++)
+                    {
+                        int neighborRow = std::clamp(row + i, 0, height - 1);
+                        int neighborCol = std::clamp(col + j, 0, width - 1);
+                        sum += src[neighborRow * width + neighborCol];
+                    }
+                }
+                dst[row * width + col] = sum / totalPixels;
+            }
+        }
+        std::swap(src, dst);
+    }
+
+    std::copy(src, src + imageSize, output);
+}
+      </code></pre>
+    </figure>
+
+      <p>
+        The time complexity of this function is <var>O</var>(<var>P</var> · <var>H</var> · <var>W</var> · <var>R</var><sup>2</sup>)
+        and for a 4160 pixel by 4160 pixel image with 3 passes and a radius of 5 we have 6.2 billion operations which took over 298.54 seconds to complete.
+		Since we are looking to optimize this, let's first just look at the performance to see how our threads are behaving.
+		Ask yourself, are there cores maxing out and are there other cores not doing any work that could help reduce the time?
+		While we could use Nsight Systems to profile and answer our questions, it would be overkill due to the volume of data collected in the 298 seconds.
+		It is easier to actually look at resource monitor and see CPU core performance.
+		The image below shows what the workload looked like in my CPU cores.
+      </p>
+	  
+	<div class="image">
+      <figure>
+	    <img src="../images/blogImages/NVIDIANsightSuiteIntro/CPUCorePerformance.png" alt="One CPU core doing all the work" />
+      </figure>
+    </div>
+	  
+	  <p>
+        From the image, it is clear that there are cores available to perform compute for our blur filter.
+      </p>
+
+    <h2>CPU Multithreaded Approach</h2>
+      <p>
+        The blurring of one pixel does not depend on the values of other blurred pixels.
+        This means that we can calculate all the pixel blurs independently.
+        Before jumping straight to the GPU, let's take advantage of the threads on the CPU and see what kind of improvement we can get.
+        Fortunately the OpenMP API lets us use our threads to compute the pixels.
+        The code below transforms the single threaded approach to a multithreaded one where we use 2 buffers to allow the blur to be correctly applied.
+      </p>
+
+    <figure class="code-block is-snippet">
+      <button class="copy-btn copy-float" type="button">Copy</button>
+      <pre><code>static void cpuMultiThreadBlur(const unsigned char* pixels,
+    unsigned char* output, const int width, const int height,
+    const int radius, const int passes = 3)
+{
+    const int totalPixels = (radius * 2 + 1) * (radius * 2 + 1);
+    const size_t imageSize = (size_t)width * height;
+
+    std::vector&lt;unsigned char&gt; bufferA(pixels, pixels + imageSize);
+    std::vector&lt;unsigned char&gt; bufferB(imageSize);
+
+    unsigned char* src = bufferA.data();
+    unsigned char* dst = bufferB.data();
+    for (int pass = 1; pass &lt;= passes; pass++)
+    {
+#pragma omp parallel for schedule(static)
+        for (int row = 0; row &lt; height; row++)
+        {
+            for (int col = 0; col &lt; width; col++)
+            {
+                int sum = 0;
+                for (int i = -radius; i &lt;= radius; i++)
+                {
+                    for (int j = -radius; j &lt;= radius; j++)
+                    {
+                        int neighborRow = std::clamp(row + i, 0, height - 1);
+                        int neighborCol = std::clamp(col + j, 0, width - 1);
+                        sum += src[neighborRow * width + neighborCol];
+                    }
+                }
+                dst[row * width + col] = sum / totalPixels;
+            }
+        }
+        std::swap(src, dst);
+    }
+
+    std::copy(src, src + imageSize, output);
+}
+      </code></pre>
+    </figure>
+
+      <p>
+        In this code snippet, a group of threads will be launched each time we hit the pragma.
+        Each thread is given a section of the pixels to calculate the blur for and the number of threads launched is based on available cores.
+		For my system, I had all 28 cores available and I was able to compute the blur in 17.9 seconds, a 16x speed up compared to the single threaded solution!
+		The image below confirms that the system is using all available cores.
+      </p>
+	  
+	<div class="image">
+      <figure>
+	    <img src="../images/blogImages/NVIDIANsightSuiteIntro/CPUAllCoresPerformance.png" alt="All CPU cores at work" />
+      </figure>
+    </div>
+	  
+      <p>
+        The next question to ask is can we get even faster and what happens if we have way more threads available to us?
+		If you own a GPU, we'll most definitely get faster and we have thousands of threads available for compute.
+      </p>
+
+    <h2>GPU Approach</h2>
+      <p>
+		Code that runs on the GPU is called a kernel.
+		It looks like a regular C++ function, but it's marked with __global__ and runs across many threads at once. 
+		Each thread executes the same kernel code but operates on a different piece of the data.
+		Before the GPU can do anything, the image has to actually be on the GPU. 
+		That means allocating device memory with <code>cudaMalloc()</code>, copying the input across PCIe with <code>cudaMemcpy()</code>, running the kernel, then copying the result back.
+		The GPU hardware groups threads together to run on its streaming multiprocessors (SM).
+		SMs are the processing units for a GPU and a GPU contains many of them.
+		Each SM has its own memory, registers, caches, and compute units that operate independently from the other SMs.
+		These SMs execute the same SASS instruction (similar to an assembly instruction) on a group of 32 threads at the same time.
+		This grouping of 32 threads is called a warp and every thread in a warp executes the same instruction at the same time.
+		When a warp is ready, one of the SM's warp schedulers picks it up and executes its next instruction.
+		Warps that are waiting on a memory read or other delay are skipped over; the scheduler picks a different ready warp instead, which is how the GPU keeps busy through memory latency.
+		To avoid having partially full warps, we want to make the blocks a multiple of 32.
+		For this example, we will make blocks of 16 x 16 threads meaning 256 threads to blur the pixels which means 8 warps per block are distributed to the SMs.
+		The grid is how many blocks are being launched in total and the number of blocks must cover the whole image.
+		We compute the grid dimensions with a ceiling divide so that if the image dimensions aren't exact multiples of 16, we still launch one extra block to cover the leftover pixels.
+		Without that, some pixels on the right and bottom edges wouldn't get a thread assigned to them.
+		For our 4160 × 4160 image with 16 × 16 blocks, that comes out to a grid of 260 × 260 = 67,600 blocks of 256 threads each.
+		This means we will launch about 17.3 million threads to compute every pixel.
+	  </p>
+	  
+	  <p>
+		We apply all this GPU knowledge to the <code>launchGpuBlur()</code> and <code>blurKernel()</code> functions, which are shown below.
+	  </p>
+	  
+	<figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button>
+	  <pre><code>__global__ void blurKernel(const unsigned char* input,
+    unsigned char* output, const int width,
+	const int height, const int radius)
+{
+    //Every block has threads and we need to take into account those blocks 
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    if(col &gt;= width || row &gt;= height)
+    {
+        return;
+    }
+
+    const int totalPixels = (radius * 2 + 1) * (radius * 2 + 1);
+    int sum = 0;
+    for(int i = -radius; i &lt;= radius; i++)
+    {
+        for(int j = -radius; j &lt;= radius; j++)
+        {
+            int neighborRow = max(0, min(row + i, height - 1));
+            int neighborCol = max(0, min(col + j, width - 1));
+            sum += input[neighborRow * width + neighborCol];
+        }
+    }
+    output[row * width + col] = sum / totalPixels;
+}		  
+		  
+void launchGpuBlur(const unsigned char* h_input,
+    unsigned char* h_output, const int width,
+	const int height, const int radius, const int passes)
+{
+    const size_t imageSize = (size_t)width * height;
+
+    unsigned char* d_input = nullptr;
+    unsigned char* d_output = nullptr;
+    cudaMalloc(&amp;d_input, imageSize);
+    cudaMalloc(&amp;d_output, imageSize);
+
+    //block is collection of thread
+    //a grid is collection of blocks
+    //We need to size the blocks to account for each pixel since each pixel gets a thread.
+    //dim3 item(x, y, z);
+    dim3 blocks(16,16); //good default but could be any multiple of 32
+    dim3 grid( (width+16-1)/16 , (height+16-1)/16 );
+    cudaMemcpy(d_input, h_input, imageSize, cudaMemcpyHostToDevice);
+    for(int i = 1; i &lt;= passes; i++)
+    {
+        blurKernel&lt;&lt;&lt;grid, blocks&gt;&gt;&gt; (d_input, d_output, width, height, radius);
+        cudaDeviceSynchronize();
+        std::swap(d_input, d_output);
+    }
+    cudaMemcpy(h_output, d_input, imageSize, cudaMemcpyDeviceToHost);
+
+    cudaFree(d_input);
+    cudaFree(d_output);
+}
+      </code></pre>
+    </figure>
+	
+	  <p>
+	    Running this on the same 4160×4160 image with the same number of passes, gives us a completion time of 255 ms.
+		A speed up of over 1100x compared to the single threaded version is great, but let's be even more impatient and squeeze even more performance out of this.
+		Note that both versions use the same function name, so if you copy-paste, update the earlier one.
+	  </p>
+	  
+	 <h2>GPU Synchronize Optimized with Nsight Systems</h2>
+	  <p>
+	    The speed of this program can no longer be analyzed by resource manager or task manager, but now Nsight Systems is the perfect tool.
+		Let's profile the program and see what we get.	  
+	  </p>
+	<div class="image">
+      <figure>
+	    <img src="../images/blogImages/NVIDIANsightSuiteIntro/NsightSystemSmWarpOccupancy.png" alt="SM Warp Occupancy Graph" />
+      </figure>
+    </div>
+	
+    <div class="image">
+      <figure>
+	    <img src="../images/blogImages/NVIDIANsightSuiteIntro/NsightSystemCUDAAPI.png" alt="CUDA API Calls" />
+      </figure>
+    </div>
+	  <p>
+		From the images, we see that our warp occupancy is great, but when looking at our CUDA API calls there are some questions we can ask.
+		It makes sense that we are calling <code>cudaDeviceSynchronize()</code> 3 times since for every pass we call the function 1 time, but let's ask do we really need to?
+		The <code>cudaDeviceSynchronize()</code> is great for making the CPU side wait until the GPU is done with its work.
+		At first glance this makes sense, we compute the output and then do a swap.
+		How could we possibly swap before we are even done doing the work?
+	  </p>
+	  
+	  <p>
+	    Well, there are two things that are happening here.
+		First, our kernel doesn't specify a stream so all items are going into a default stream's queue in order.
+		Since the queue will process the work in order, it is impossible for the most recently launched kernel to finish before another kernel.
+		Second, the values of input and output are captured at the moment it is queued so the GPU will still operate on the addresses it was handed rather than the current values.
+		This means that the <code>cudaDeviceSynchronize()</code> doesn't actually do anything for us and forces the CPU to wait unnecessarily. 
+		Let's remove the <code>cudaDeviceSynchronize()</code> and see if there are any performance increases.
+	  </p>
+	  
+	<div class="image">
+      <figure>
+	    <img src="../images/blogImages/NVIDIANsightSuiteIntro/NsightSystemCUDAAPINoSync.png" alt="CUDA API Calls without the Syncs" />
+      </figure>
+    </div>
+	  
+	  <p>
+	    With the exact same code, but <code>cudaDeviceSynchronize()</code> removed, the Nsight System CUDA API timeline doesn't have any more syncs and is dominated by <code>cudaMalloc()</code> and <code>cudaMemcpy()</code>.
+		Right now it seems like <code>cudaMemcpy()</code> is taking forever to complete, but <code>cudaMemcpy()</code> is a blocking call and will force the CPU to actually wait until it is done.
+		The new process is able to complete in 227 ms. 
+	  </p>
+	  
+	  <p>
+		There are other changes that can be made to utilize the GPU architecture more.
+		For example, we could use pinned memory for the host input and host output vectors to reduce the time it takes to transfer between host and device.
+		We could also use <code>cudaMemcpyAsync()</code> to let memory transfers overlap with GPU kernel work and CPU work which would be visible in Nsight Systems.
+		These performance increases would be great, but let's also optimize the kernel itself.
+		Is there a way for us to optimize the actual algorithm?
+	  </p>
+
+    <h2>GPU Performance Kernel Optimized</h2>
+      <p>
+		Every thread is executing the kernel and the kernel is traveling through the radius amount of pixels to get a blur for the current pixel it is at.
+		The actual total operations performed when calculating the blur is (<var>R</var> · 2 + 1)<sup>2</sup>.
+		What if instead of going through both the rows and columns in the same kernel, we just go through rows and then columns?
+	  </p>
+	
+	<figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button>
+	  <pre><code>__global__ void blurKernelHorizontal(const unsigned char* input,
+    unsigned char* output, const int width,
+	const int height, const int radius)
+{
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    if(col &gt;= width || row &gt;= height) return;
+
+    const int n = radius * 2 + 1;
+    int sum = 0;
+    for(int j = -radius; j &lt;= radius; j++) {
+        int c = max(0, min(col + j, width - 1));
+        sum += input[row * width + c];
+    }
+    output[row * width + col] = sum / n;
+}
+
+__global__ void blurKernelVertical(const unsigned char* input,
+    unsigned char* output, const int width,
+	const int height, const int radius)
+{
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    if(col &gt;= width || row &gt;= height) return;
+
+    const int n = radius * 2 + 1;
+    int sum = 0;
+    for(int i = -radius; i &lt;= radius; i++) {
+        int r = max(0, min(row + i, height - 1));
+        sum += input[r * width + col];
+    }
+    output[row * width + col] = sum / n;
+}	  
+		  
+void launchGpuBlur(const unsigned char* h_input,
+    unsigned char* h_output, const int width,
+	const int height, const int radius, const int passes)
+{
+    const size_t imageSize = (size_t)width * height;
+
+    unsigned char* d_in   = nullptr;
+    unsigned char* d_out  = nullptr;
+    unsigned char* d_temp = nullptr;
+    cudaMalloc(&amp;d_in,   imageSize);
+    cudaMalloc(&amp;d_out,  imageSize);
+    cudaMalloc(&amp;d_temp, imageSize);
+
+    dim3 blocks(16, 16);
+    dim3 grid((width + 16 - 1) / 16, (height + 16 - 1) / 16);
+
+    cudaMemcpy(d_in, h_input, imageSize, cudaMemcpyHostToDevice);
+
+    for(int i = 0; i &lt; passes; i++)
+    {
+        blurKernelHorizontal&lt;&lt;&lt;grid, blocks&gt;&gt;&gt;(d_in,   d_temp, width, height, radius);
+        blurKernelVertical  &lt;&lt;&lt;grid, blocks&gt;&gt;&gt;(d_temp, d_out,  width, height, radius);
+        std::swap(d_in, d_out);
+    }
+
+    cudaMemcpy(h_output, d_in, imageSize, cudaMemcpyDeviceToHost);
+
+    cudaFree(d_in);
+    cudaFree(d_out);
+    cudaFree(d_temp);
+}
+      </code></pre>
+    </figure>
+	
+	  <p>
+	  By taking the row and column calculation out into two separate kernels, the processing is now (<var>R</var> · 2 + 1) + (<var>R</var> · 2 + 1).
+	  With this optimization we complete the computation in 106 ms. 
+	  There is a problem though since we are doing division twice in each pass.
+	  The division will cause truncation and won't make the blur 100% identical to the less optimized ones.
+	  We can fix that by using a wider integer buffer without dividing then dividing in the vertical pass.
+	  </p>
+	
+	<h2>Conclusion</h2>
+	  <p>
+		There was a lot of GPU specific knowledge packed into this, but the bigger takeaway isn't any single optimization trick we did here.
+		The real skill is learning to ask the right questions, using the right tool, and being as greedy as possible.
+		We started with a single threaded filter that took almost 5 minutes to complete and finished with a version that can run in 106 ms.
+		Profiling the problem with Nsight Systems really helped us determine if the hardware was being as useful as possible.
+		Analyzing the kernel's algorithm itself also helped us push forward to a faster solution.
+		The current work here only scratched the surface of what we can do (pinning memory, shared-memory tiling, asynchronous transfers), but
+		these lessons and optimizations can be taken with us to our next problems to solve.
+	  </p>
+	
+    </div>
+
+  </main>
+
+  <!-- ═════════ FOOTER ═════════ -->
+  <footer class="container">
+    <p>© 2026 Thomas Ellett</p>
+    <p><a href="../index.html">← Back to home</a></p>
+  </footer>
+
+  <!-- Copy-to-clipboard for code blocks -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('figure.code-block .copy-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const code = btn.closest('figure').querySelector('code');
+          try {
+            await navigator.clipboard.writeText(code.textContent);
+            btn.textContent = 'Copied';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1600);
+          } catch (e) {
+            btn.textContent = 'Ctrl+C';
+            setTimeout(() => { btn.textContent = 'Copy'; }, 1600);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

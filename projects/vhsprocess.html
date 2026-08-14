@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AWS Cloud Video Processing — Thomas Ellett</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a18;
+      --ink-muted: #5a5a54;
+      --ink-faint: #6e6e66;      /* darkened from #9a9a90 — old value failed WCAG AA on the paper background */
+      --paper: #faf9f6;
+      --paper-tint: #f1f0ec;
+      --rule: #dddbd3;
+      --accent: #2a4fa8;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Source Serif 4', Georgia, serif;
+      --mono: 'DM Mono', 'Courier New', monospace;
+      --code: 'JetBrains Mono', 'Cascadia Code', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+      --max: 720px;
+
+      /* Dark code panel */
+      --code-bg:        #1e1e22;
+      --code-bg-chrome: #16161a;
+      --code-border:    #2c2c33;
+      --code-text:      #d4d4d4;
+    }
+
+    html { font-size: 18px; }
+    body { font-family: var(--serif); background: var(--paper); color: var(--ink); line-height: 1.75; }
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--paper); border-bottom: 1px solid var(--rule); padding: 0.85rem 0;
+    }
+    nav .inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-name { font-family: system-ui, -apple-system, sans-serif; font-size: 0.95rem; font-weight: 500; text-decoration: none; color: var(--ink); }
+    .nav-back {
+      font-family: system-ui, -apple-system, sans-serif; font-size: 0.85rem; font-weight: 400;
+      text-decoration: none; color: var(--ink-muted); transition: color 0.15s;
+      display: flex; align-items: center; gap: 0.35rem;
+    }
+    .nav-back:hover { color: var(--accent); }
+
+    /* HEADER */
+    .project-header { padding: 3.5rem 0 2.5rem; border-bottom: 1px solid var(--rule); }
+    .breadcrumb { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 1rem; }
+    .breadcrumb a { color: var(--ink-faint); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--accent); }
+    h1 { font-family: var(--serif); font-size: 2.2rem; font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 1rem; }
+    .project-meta { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.25rem; }
+    .meta-item { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; color: var(--ink-faint); }
+    .meta-item strong { color: var(--ink-muted); font-weight: 600; display: block; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+    .tag {
+      font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.05em;
+      background: var(--paper-tint); border: 1px solid var(--rule); color: var(--ink-muted);
+      padding: 0.25rem 0.7rem; border-radius: 2px; display: inline-block;
+    }
+
+    /* LINKS ROW */
+    .project-links { display: flex; gap: 1rem; flex-wrap: wrap; padding: 1.5rem 0; border-bottom: 1px solid var(--rule); }
+    .btn {
+      font-family: var(--sans); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em;
+      text-decoration: none; padding: 0.5rem 1.1rem; border-radius: 2px;
+      transition: all 0.15s; display: inline-flex; align-items: center; gap: 0.4rem;
+    }
+    .btn-primary { background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+    .btn-primary:hover { background: #1e3d8a; }
+    .btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+    .btn-outline:hover { border-color: var(--ink-muted); }
+
+    /* CONTENT */
+    .project-content { padding: 2.5rem 0; }
+    .project-content h2 { font-family: var(--serif); font-size: 1.3rem; font-weight: 400; margin: 2.5rem 0 0.85rem; }
+    .project-content h2:first-child { margin-top: 0; }
+    .project-content p { font-size: 1rem; color: var(--ink-muted); margin-bottom: 1.1rem; line-height: 1.8; }
+    .project-content ul { padding-left: 1.5rem; color: var(--ink-muted); font-size: 1rem; line-height: 1.8; margin-bottom: 1.1rem; }
+    .project-content li { margin-bottom: 0.35rem; }
+
+    /* MEDIA */
+    .media-section { margin: 2.5rem 0; }
+    .media-section h2 { font-family: var(--serif); font-size: 1.3rem; font-weight: 400; margin-bottom: 1.25rem; }
+    .media-section h3 { font-family: var(--serif); font-size: 1.05rem; font-weight: 400; color: var(--ink); margin-bottom: 0.75rem; }
+
+    /* Image gallery */
+    .image-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .image-gallery figure { margin: 0; }
+    .image-gallery img {
+      width: 100%; display: block; border-radius: 3px;
+      border: 1px solid var(--rule); background: var(--paper-tint);
+    }
+    .image-gallery figcaption { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 0.04em; margin-top: 0.5rem; }
+
+    /* Single wide image */
+    .image-wide figure { margin: 0 0 1.5rem; }
+    .image-wide img { width: 100%; display: block; border-radius: 3px; border: 1px solid var(--rule); background: var(--paper-tint); }
+    .image-wide figcaption { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 0.04em; margin-top: 0.5rem; }
+
+    /* Video */
+    .video-wrap {
+      position: relative; padding-bottom: 56.25%; /* 16:9 */
+      height: 0; overflow: hidden; border-radius: 3px;
+      border: 1px solid var(--rule); background: #000; margin-bottom: 0.75rem;
+    }
+    .video-wrap video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
+    .video-caption { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 0.04em; margin-bottom: 1.5rem; }
+
+	/* ============================================================
+    DARK CODE PANEL — no syntax highlighting, just a clean surface
+    Two variants:
+    figure.code-block            -> "file" view (chrome bar)
+    figure.code-block.is-snippet -> "function" view (chrome hidden)
+    ============================================================ */
+	
+    figure.code-block {
+      margin: 1.25rem 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--code-border);
+      box-shadow: 0 8px 30px rgba(20, 20, 30, 0.18);
+      background: var(--code-bg);
+      position: relative;
+    }
+
+    /* Window chrome bar (file variant only) */
+    .code-chrome {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.55rem 0.85rem;
+      background: var(--code-bg-chrome);
+      border-bottom: 1px solid var(--code-border);
+    }
+    .code-dots { display: flex; gap: 0.45rem; }
+    .code-dots span { width: 11px; height: 11px; border-radius: 50%; display: block; }
+    .code-dots span:nth-child(1) { background: #ff5f56; }
+    .code-dots span:nth-child(2) { background: #ffbd2e; }
+    .code-dots span:nth-child(3) { background: #27c93f; }
+    .code-filename { font-family: var(--mono); font-size: 0.74rem; color: #b9b9c4; letter-spacing: 0.02em; }
+
+    .copy-btn {
+      font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.04em;
+      color: #b9b9c4; background: #ffffff10; border: 1px solid var(--code-border);
+      padding: 0.26rem 0.65rem; border-radius: 4px; cursor: pointer; transition: all 0.15s;
+    }
+    .code-chrome .copy-btn { margin-left: auto; }
+    .copy-btn:hover { background: #ffffff1c; color: #fff; }
+    .copy-btn.copied { color: #27c93f; border-color: #27c93f55; }
+
+    /* The code surface itself */
+    figure.code-block pre {
+      margin: 0; padding: 0; border: none; border-radius: 0;
+      overflow-x: auto; background: var(--code-bg);
+    }
+    figure.code-block pre code {
+      display: block;
+      font-family: var(--code);
+      font-size: 0.82rem;
+      line-height: 1.65;
+      padding: 1.1rem 1.4rem;
+      background: transparent;
+      color: var(--code-text);
+      font-variant-ligatures: none;
+      -moz-tab-size: 4; tab-size: 4;
+    }
+
+    /* Scrollbar */
+    figure.code-block pre::-webkit-scrollbar { height: 10px; }
+    figure.code-block pre::-webkit-scrollbar-track { background: var(--code-bg-chrome); }
+    figure.code-block pre::-webkit-scrollbar-thumb { background: #3a3a44; border-radius: 5px; }
+    figure.code-block pre::-webkit-scrollbar-thumb:hover { background: #4a4a55; }
+
+    /* ---- SNIPPET VARIANT: no chrome, floating copy button ---- */
+    figure.code-block.is-snippet { box-shadow: 0 4px 18px rgba(20, 20, 30, 0.14); }
+    figure.code-block.is-snippet .code-chrome { display: none; }
+    figure.code-block.is-snippet pre code { padding: 1.9rem 1.4rem 1.2rem; }
+    figure.code-block.is-snippet .copy-float {
+      position: absolute; top: 0.55rem; right: 0.6rem; z-index: 2;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    figure.code-block.is-snippet:hover .copy-float,
+    figure.code-block.is-snippet .copy-float:focus { opacity: 1; }
+    /* Touch devices don't hover — always show the copy button on those. */
+    @media (hover: none) {
+      figure.code-block.is-snippet .copy-float { opacity: 1; }
+    }
+
+    /* FOOTER */
+    footer { padding: 2rem 0; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+    footer p { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.06em; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+      .image-gallery { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="inner">
+      <a class="nav-name" href="../index.html">Thomas Ellett</a>
+      <a class="nav-back" href="../index.html#projects">← Projects</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <header class="project-header">
+      <p class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#projects">Projects</a> / AWS Cloud Video Processing</p>
+      <h1>AWS Cloud Video Processing</h1>
+      <p style="font-size: 1.05rem; color: var(--ink-muted); margin-top: 0.5rem; max-width: 580px;">
+        Reducing video processing time with distributed computing.
+      </p>
+      <div class="project-meta">
+        <div class="meta-item"><strong>Status</strong>Completed</div>
+        <div class="meta-item"><strong>Year</strong>2026</div>
+        <div class="meta-item"><strong>Stack</strong>C++, CUDA, FFmpeg, S3, SQS, DynamoDB, EKS, KEDA, Karpenter</div>
+      </div>
+    </header>
+
+    <div class="project-content">
+
+      <h2>Introduction</h2>
+      <p>
+        This all started because I wanted to apply cool effects on video files and have it be very fast.
+		I fell down a rabbit hole while researching and I now understand why this is a whole industry.
+		The goals of the project were to:
+      </p>
+	  
+      <ul>
+        <li>Process the video as fast as possible.</li>
+        <li>Handle several videos needing to be processed at the same time.</li>
+		<li>Apply a VHS effect to a video file.</li>
+      </ul>
+	  
+      <p>
+		This page will document things I learned while accomplishing these goals, reasoning for the architectural choices, and the results.
+      </p>
+	  
+	  <h2>Processing a Video Fast</h2>
+	  <p>
+		Before actually applying the effects, we need to understand the basics of a video processing pipeline.
+		For the project specifically, I have these video processing stages:
+      </p>
+	  
+	  <ul>
+        <li>Demux stage to find basic information about the input file like if there is a video stream.</li>
+        <li>Decode stage to create a decoder that is used to decompress video packets into frames.</li>
+		<li>Process stage where every frame has its luminance and chrominance planes modified.</li>
+		<li>Encode stage to turn the frames back into compressed video packets.</li>
+		<li>Mux stage to write back into the container.</li>
+      </ul>
+	  
+	  <p>
+		The decode, process, and encode stages are the most computationally heavy because decode and encode will run on every single frame which can be in the tens of thousands depending on the frame rate and length of the video.
+		The process stage can be expensive too depending on how many pixels are modified and the complexity of the effect algorithms.
+		Luckily, GPUs have dedicated hardware encoders and decoders as well as CUDA cores that can be used to reduce the time it takes for these 3 stages.
+		This project uses FFmpeg to build all stages of the pipeline and setup the GPU hardware to properly use NVDEC for decoding and NVENC for encoding.
+		For the processing stage, the single threaded effects were converted to custom CUDA kernels.
+		With these 3 changes, a 4K 60FPS 4 minute video with 4 effects applied went from 1.25 hours to under a minute to process.
+	  </p>
+	  
+	  <p>
+	  	One quick note about this benchmark is that adding or removing effects didn't linearly change the processing time on the CPU.
+		Some effects were much heavier than others and adding them made a noticeable increase to processing time on the CPU end.
+		On the other hand, when applying the same effects in CUDA there was barely any change to the processing time which makes the speedup between CPU and GPU increase as we keep adding effects.
+	  </p>
+	  
+	  <h2>Handling Several Videos for Processing</h2>
+	  
+	  <p>
+		I noticed that when running the program on my own system, the GPU was nearly maxing out and if I had other tasks using my GPU the processing time was slower.
+		Additionally, processing multiple videos at the same time was not possible which meant I had to wait for one process to finish to start another.
+		Ultimately, how much I could process and how fast were limited so I leaned into my AWS knowledge to shift to a cloud distributed compute design.
+		Shifting the workload to the cloud sounds simple, but there is a new list of tasks/goals which are:
+	  </p>
+	  
+	  <ul>
+		<li>Store videos somewhere every worker can reach.</li>
+		<li>Break long videos into chunks and process them in parallel across many workers.</li>
+		<li>Handle failures gracefully, since workers and instances can die.</li>
+		<li>Scale the number of workers and keep costs low.</li>
+      </ul>
+	  
+	  <p>
+		Being able to upload and download videos was probably the easiest part.
+		AWS has two main storage options and they are AWS S3 buckets or AWS elastic block storage (EBS), each having its own pros and cons.
+		AWS S3 bucket objects can be accessed by any worker in any AZ, have storage capacity well beyond our needs, and S3's pricing model works well for our burst workloads.
+		The main factor though is that the short lived EC2 GPU instances need to have access for reading and writing to the same location which isn't possible with EBS volumes.
+		EBS volumes do have low latency since they're attached to EC2 instances, but it won't help us for our use case and for these reasons AWS S3 buckets will be used.
+	  </p>
+	  
+	  <p>
+		If a very long video (2 hours) is sent into a GPU instance for processing then that GPU instance owns that task until completion.
+		In this scenario, one GPU instance sits at max or near max utilization while others are idle and if processing errors occur later then compute time would have been wasted to reach the error.
+		This design is not ideal and the videos can be processed with much better efficiency and scalability by using Amazon Simple Queue Service (SQS) and Amazon DynamoDB.
+	  </p>
+	  
+	  <p>
+		Instead of one large task, the video is broken up into chunks of ~30 seconds if the video is longer than 1 minute and 30 seconds.
+		Broken up chunks are tagged with a job ID and stored back into a temporary section of the input S3 bucket.
+		Each chunk is then sent to an SQS queue where the GPU instances can scale up or down based on queue length.
+	  </p>
+	
+	  <p>
+		The job IDs prevent the program from mixing chunks from other videos together and DynamoDB will track how many chunks for a video are left.
+		As workers finish chunks, they decrement that video's counter in DynamoDB and the worker that brings the counter to zero will perform the final stitch that reassembles the chunks into one output video.
+	  </p>
+	  
+	  <p>
+	  	One concern is that SQS can hand the same chunk to two workers and count them twice.
+		This will make the counter hit zero early and stitch an incomplete video with no error to show for it.
+		To avoid that, each job's row keeps a set of the chunks it has already recorded, and a chunk that is already in that set is ignored.
+	  </p>
+	  
+	  <p>
+		Workers can crash mid-chunk, spot GPU instances can be lost, and chunks can fail to process, so the program has to recover gracefully and still produce the final video.
+		SQS handles the issue of failed chunks being lost because the chunk is only deleted from the queue if an instance fully processes it.
+		If a chunk fails then it will just reappear in the queue and be processed again. 
+		More importantly, that means the video's chunk counter decrement in DynamoDB must occur after it is actually successfully processed.
+		There are also chunks that could just fail no matter what and those are moved into a dead-letter queue to prevent wasting more compute and clogging the queue.
+	  </p>
+	  
+	  <p>
+		The final task was to scale workers correctly and keep cost low.
+		By using Kubernetes Event-driven Autoscaling (KEDA), the number of worker pods is scaled up based on SQS queue length.
+		Amazon Elastic Kubernetes Service (EKS) can manage which worker pod runs on which GPU instance and the instances can be scaled up from zero by Karpenter.
+		This design will ensure that for high throughput there will be enough resources ready to process, and for low throughput any idle GPU instances are taken down to save cost.
+	  </p>
+	  
+	  <h2>VHS Effects</h2>
+	  
+	  <p>
+		This part of the project was rather tricky because there isn't a common consensus to what VHS effect should look like, CRT televisions added their own effect to the display, and I personally don't remember what VHS tapes were like nor have access to one.
+		I looked at online resources and these effects commonly appeared:
+	  </p>
+	  
+	  <ul>
+        <li>Horizontal scanlines.</li>
+        <li>Chromatic bleed.</li>
+		<li>Chromatic aberration.</li>
+		<li>Noise/Static.</li>
+		<li>Tape damage.</li>
+		<li>Tearing.</li>
+      </ul>
+	  
+	  <p>
+		There is nothing too special about the algorithms to incorporate these effects, but the type of data that came from decoded frames was interesting.
+		After decoding, the application gave back 1 luminance and 1 chrominance plane, but the chrominance plane is interleaved.
+		For readability, I decided to split up the planes, apply the effects, and interleave them back together.
+		The code below displays how I used CUDA to deinterleave and interleave as well as some of the core effects that gave a VHS look to a video.
+	  </p>
+	  
+	  <figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button> 
+<pre><code>__global__ void DeinterleaveUV(const uint8_t* uv, int pitchUV,
+                               uint8_t* Uframe, uint8_t* Vframe, int pitchC,
+                               int cw, int ch)
+{
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+    if (x >= cw || y >= ch) return;
+    Uframe[y * pitchC + x] = uv[y * pitchUV + 2 * x];       // U V U V U V ...
+    Vframe[y * pitchC + x] = uv[y * pitchUV + 2 * x + 1];
+}</code></pre>
+       </figure>
+	
+	  <figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button> 
+<pre><code>__global__ void InterleaveUV(uint8_t* Uframe, uint8_t* Vframe,
+                             int stride, uint8_t* dstUV, int strideUV,
+							 int height, int width)
+{
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+    if (x >= width || y >= height) return;
+    dstUV[y * strideUV + 2 * x] =  Uframe[y * stride + x];
+    dstUV[y * strideUV + 2 * x + 1] =  Vframe[y * stride + x];
+}</code></pre>
+      </figure>
+	  
+	  <p>
+		Deinterleave and interleave is pretty straightforward, but there is a neat technique used to access the element we want.
+		The planes from a frame are given to the application as an unsigned 8 bit int pointer which means doing a [][] accessor isn't possible.
+		It is a flattened 2D array which means that the row or y multiplied by the stride plus the column or x will give you the pixel you want.
+	  </p>
+	  
+	  <figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button> 
+<pre><code>__global__ void Scanlines(uint8_t* Yframe, int width, int height, int stride)
+{
+    int x = blockDim.x * blockIdx.x + threadIdx.x; 
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+    if (x >= width || y >= height || x &lt; 0 || y &lt; 0)
+    {
+        return;
+    }
+    int period = 6;
+    int lineThickness = 3;
+    if (y % period &lt; lineThickness)
+    {
+        Yframe[y * stride + x] *= 0.6f;
+    }
+}</code></pre>
+      </figure>
+	  
+	  <p>
+		Scanlines were the most common effect I saw that gave a VHS feeling and it is just an effect that came from CRT TVs.
+		Visually looking at the effect, it is just a simple darkening of a row in an interval which means that the luminance frame or Y frame must be modified.
+	  </p>	  
+	  
+	  <figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button> 
+<pre><code>__global__ void ChromaBleed(uint8_t* frame, uint8_t* buffer,
+							int width, int height, int stride, int radius)
+{
+    int x = blockDim.x * blockIdx.x + threadIdx.x; 
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+    if (x >= width || y >= height || x &lt; 0 || y &lt; 0)
+    {
+        return;
+    }
+    int average = 0;
+    for (int i = -radius; i &lt;= radius; i++)
+    {
+        int index = max(0, min(x + i, width - 1));
+        average += frame[y * stride + index];
+    }
+    buffer[y * stride + x] = average / (radius * 2 + 1);
+}</code></pre>
+      </figure>
+
+	  <figure class="code-block is-snippet">
+	  <button class="copy-btn copy-float" type="button">Copy</button> 
+<pre><code>__global__ void ChromaAberration(uint8_t* frame, uint8_t* buffer,
+								 int width, int height, int stride, int shift)
+{
+    int x = blockDim.x * blockIdx.x + threadIdx.x; 
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+    if (x >= width || y >= height || x &lt; 0 || y &lt; 0)
+    {
+        return;
+    }
+    int index = max(0, min(x+shift,width-1));
+    buffer[y * stride + x] = frame[y * stride + index];
+}</code></pre>
+      </figure>
+	  
+ 	  <p>
+		Both the chrominance effects above were the second most common effect I saw and they are pretty simple effects.
+		ChromaBleed(...) and ChromaAberration(...) are where color would spread outside of the expected area.
+		What is most interesting is that I couldn't use std::clamp here because these functions run on the GPU and the standard library isn't available in device code.
+		It would be wasteful to import all of std into the GPU so I had to use max and min to clamp which are GPU functions.
+	  </p>
+	  
+	  <p>
+		If you wanted to make your own VHS effect, then I would say that copying the functions above would give you the bare minimum in achieving that VHS effect for your project.
+	  </p>
+	  
+      <h2>Results</h2>
+      <p>
+		I've been writing a lot and it has been hard holding back all the cool things I found.
+		To reward readers, here is the final product with many effects applied to get as close as possible to a VHS tape.
+		
+      </p>
+	  
+        <div class="media-section">
+          <h3>1080P 30FPS Bird video by Krzysztof Chrostowski</h3>
+          <div class="video-wrap">
+            <video controls preload="none" playsinline>
+              <source src="../videos/vhs/bird.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+		
+		<div class="media-section">
+          <h3>VHS Effects Applied to Bird Video</h3>
+          <div class="video-wrap">
+            <video controls preload="none" playsinline>
+              <source src="../videos/vhs/birdVhsShort.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+		
+		
+		<div class="media-section">
+          <h3>4K 30FPS Chicken Video by Magda Ehlers</h3>
+          <div class="video-wrap">
+            <video controls preload="none" playsinline>
+              <source src="../videos/vhs/chicken.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+		
+		<div class="media-section">
+          <h3>VHS Effects Applied to Chicken Video</h3>
+          <div class="video-wrap">
+            <video controls preload="none" playsinline>
+              <source src="../videos/vhs/chickenVhs.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+		
+	   <p>
+		Processing both of these videos only cost cents and the total cost of this project including debugging was roughly $9.
+		Admittedly about $3 came from me trying to wait for a GPU spot instance to come up and having to switch to on-demand GPU instances instead.
+		What is nice about the design is that this can be expanded to more than just applying VHS effects to a video.
+		The current design has it that any video processing can be performed on input files, but I had to stop myself before extending this project to a year long one.
+	   </p>
+	   
+	   <p>
+		Something fun to note is that the file size has significantly changed after applying the effects.
+		The bird video went from 65 MB to 255 MB which shocked me at first.
+		It turned out that when the video had those effects applied there were far fewer predictable frames.
+		Videos are compressed to I, P, and B frames where the P and B frames are predicted frames.
+		The main issue is that fewer pixels are predictable because of all the noise and effects I added which made those frames bigger and the total file size bigger.
+	   </p>
+	   
+	   <p>
+		If you're wondering why the audio stream is missing, it is not a problem on your end.
+		It was my own intentional choice to drop the audio stream since I really wanted to focus on the video data.
+	   </p>
+		
+
+      <h2>Acknowledgements</h2>
+      <p>
+        The videos aren't mine and all my test data came from Pexels.
+		Without that data I couldn't have tested my application's performance on 4K 60FPS video.
+		The FFmpeg library carried my project a lot too and the project wouldn't exist without it.
+      </p>
+
+    </div>
+
+  </main>
+
+  <footer class="container">
+    <p>© 2026 Thomas Ellett</p>
+    <p><a href="../index.html" style="color: var(--ink-faint); text-decoration: none;">← Back to home</a></p>
+  </footer>
+  
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('figure.code-block .copy-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const code = btn.closest('figure').querySelector('code');
+          try {
+            await navigator.clipboard.writeText(code.textContent);
+            btn.textContent = 'Copied';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1600);
+          } catch (e) {
+            btn.textContent = 'Ctrl+C';
+            setTimeout(() => { btn.textContent = 'Copy'; }, 1600);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mel Spectrogram and MFCC — Thomas Ellett</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a18;
+      --ink-muted: #5a5a54;
+      --ink-faint: #6e6e66;      /* darkened from #9a9a90 — old value failed WCAG AA on the paper background */
+      --paper: #faf9f6;
+      --paper-tint: #f1f0ec;
+      --rule: #dddbd3;
+      --accent: #2a4fa8;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Source Serif 4', Georgia, serif;
+      --mono: 'DM Mono', 'Courier New', monospace;
+      --max: 720px;
+    }
+
+    html { font-size: 18px; }
+    body { font-family: var(--serif); background: var(--paper); color: var(--ink); line-height: 1.75; }
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; background: var(--paper); border-bottom: 1px solid var(--rule); padding: 0.85rem 0; }
+    nav .inner { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .nav-name { font-family: system-ui, -apple-system, sans-serif; font-size: 0.95rem; font-weight: 500; text-decoration: none; color: var(--ink); }
+    .nav-back { font-family: system-ui, -apple-system, sans-serif; font-size: 0.85rem; font-weight: 400; text-decoration: none; color: var(--ink-muted); transition: color 0.15s; display: flex; align-items: center; gap: 0.35rem; }
+    .nav-back:hover { color: var(--accent); }
+
+    /* WRITING HEADER */
+    .article-header { padding: 3.5rem 0 2.5rem; border-bottom: 1px solid var(--rule); }
+    .breadcrumb { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 1rem; }
+    .breadcrumb a { color: var(--ink-faint); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--accent); }
+    h1 { font-family: var(--serif); font-size: 2.2rem; font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 1rem; }
+    .article-meta { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.25rem; }
+    .meta-item { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; color: var(--ink-faint); }
+    .meta-item strong { color: var(--ink-muted); font-weight: 600; display: block; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+
+    /* ESSAY ARTICLE CONTENT */
+    .article-content { padding: 2.5rem 0; }
+    .article-content h2 { font-family: var(--serif); font-size: 1.4rem; font-weight: 400; margin: 2.5rem 0 0.85rem; color: var(--ink); }
+    .article-content h3 { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; margin: 1.75rem 0 0.5rem; color: var(--ink-muted); }
+    .article-content h2:first-child { margin-top: 0; }
+    .article-content p { font-size: 1rem; color: var(--ink-muted); margin-bottom: 1.25rem; line-height: 1.8; text-align: justify; }
+    
+    /* Editorial Elements */
+    .article-content ul, .article-content ol { padding-left: 1.5rem; color: var(--ink-muted); font-size: 1rem; line-height: 1.8; margin-bottom: 1.25rem; }
+    .article-content li { margin-bottom: 0.4rem; }
+    
+    blockquote { margin: 2rem 0; padding-left: 1.25rem; border-left: 2px solid var(--accent); font-style: italic; color: var(--ink-muted); }
+    blockquote p { text-align: left !important; margin-bottom: 0 !important; }
+    
+	.equation-box {
+		  background-color: var(--paper-tint);
+		  border: 1px solid var(--rule);
+		  border-radius: 3px;
+		  padding: 1.5rem;
+		  margin: 2rem 0;
+		  font-size: 1.2rem;
+		  display: flex;
+		  justify-content: center;
+		  align-items: center;
+		}
+		
+	mjx-container, mjx-container * {
+      margin: initial;
+      padding: initial;
+      display: inline-block;
+    }
+	
+    /* Code blocks / Academic Notation */
+    code { font-family: var(--mono); font-size: 0.82em; background: var(--paper-tint); padding: 0.15rem 0.35rem; border-radius: 3px; color: #b83232; }
+    pre { background: var(--paper-tint); border: 1px solid var(--rule); padding: 1rem; border-radius: 3px; overflow-x: auto; margin-bottom: 1.5rem; }
+    pre code { background: transparent; padding: 0; color: var(--ink); font-size: 0.78rem; }
+
+    /* IMAGE HANDLING */
+    figure { margin: 2.25rem 0; }
+    img { width: 100%; display: block; border-radius: 3px; border: 1px solid var(--rule); background: var(--paper-tint); }
+    figcaption { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 0.04em; margin-top: 0.65rem; text-align: center; }
+
+    /* CITATION CARD BLOCK */
+    .citation-block { background: var(--paper-tint); border: 1px solid var(--rule); border-radius: 3px; padding: 1.25rem; margin-top: 4rem; }
+    .citation-title { font-family: var(--sans); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); margin-bottom: 0.5rem; }
+    .citation-block pre { margin-bottom: 0; border: none; padding: 0.5rem 0 0; background: transparent; }
+    .citation-block pre code { font-size: 0.72rem; color: var(--ink-muted); }
+
+    /* FOOTER */
+    footer { padding: 2rem 0; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+    footer p { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.06em; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+      .article-content p { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="inner">
+      <a class="nav-name" href="../index.html">Thomas Ellett</a>
+      <a class="nav-back" href="../index.html#writing">← Writing</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <header class="article-header">
+      <p class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#writing">Writing</a> / Mel Spectrogram and Mel-Frequency Cepstral Coefficients</p>
+      <h1>Mel Spectrogram and Mel-Frequency Cepstral Coefficients</h1>
+      <p style="font-size: 1.05rem; color: var(--ink-muted); margin-top: 0.5rem; max-width: 580px; font-style: italic;">
+        Notes on Mel spectrograms and Mel-Frequency Cepstral Coefficients, and how they can be used for speech recognition.
+      </p>
+      
+      <div class="article-meta">
+        <div class="meta-item"><strong>Topic</strong>Signal Processing</div>
+      </div>
+    </header>
+
+    <div class="article-content">
+
+      <h2>Introduction</h2>
+      <p>
+	    Back in 2021, I did signal analysis on the words "Yes" and "No" to determine if it was possible to detect these words using only their frequency characteristics.
+		It was found that there were distinct differences in the frequency domain for these words, but the word detection was imperfect and yielded about an 87% success rate.
+		These notes are to establish the foundation for how the word detection accuracy can be pushed further.
+      </p>
+
+      <h2>What is a Mel Scale</h2>
+      <p>
+		Turns out Mel isn't a person, but a scale that measures the pitch more closely to how humans actually hear it rather than the frequency.
+		This scale was helpful because humans apparently aren't as sensitive to differences in higher frequencies compared to lower frequencies.
+		This scale will take frequencies and make them more human relatable and the formula to convert Hertz to Mels is:
+      </p>
+	  
+	  <div class="equation-box">
+        $$m = 2595 \times \log_{10}\left(1 + \frac{f}{700}\right)$$
+      </div>
+	  
+	  <p>Where:</p>
+    <ul>
+        <li><strong>$m$</strong> = The pitch in Mels</li>
+        <li><strong>$f$</strong> = The frequency in Hertz (Hz)</li>
+    </ul>
+	
+	  <h2>Why is a Mel Scale Helpful</h2>
+      <p>
+		What does this actually do for us though?
+		Well, it turns out this conversion helps with feature extraction since it gives less resolution to high frequencies, where we don't need that fine detail to tell sounds apart.
+		It can also help us make something called a Mel spectrogram which gives an amplitude and frequency representation over time.
+		For a Mel spectrogram we do the same steps as a normal spectrogram (Short-Time Fourier Transform and convert amplitude to dB) and we also convert the frequencies to the Mel scale.
+      </p>
+	  
+	  <h2>How to apply Mel Scale and Make a Mel Spectrogram</h2>
+      <p>
+		To convert to the Mel scale from frequencies, we need Mel bands and a Mel filter bank.
+		The number of Mel bands/bins varies depending on the problem, but it usually is 20, 40, or 128.
+		The Mel bands/bins are just evenly spaced out to fit within your minimum Mel value and maximum Mel value from the signal.
+		Then we can convert the Mel bands/bins centers back to Hertz and round these values to the nearest frequency bin.
+		After that, we create the Mel filterbank (bunch of triangle filters) based on the Mel bands centers that will be applied to the spectrogram.
+		The image below is a "Yes" signal Mel spectrogram that had these steps applied.
+      </p>
+	  
+	  <figure>
+	    <img src="../images/blogImages/MelSpectrogram/YesMelSpectrogram.png" alt="Yes signal, mel filter bank, and Mel spectrogram" />
+	    <figcaption>Fig. 1 — The "Yes" signal, Mel filter bank, and Mel spectrogram of the "Yes" signal.</figcaption>
+	  </figure>
+	  
+	  <h2>Mel-Frequency Cepstral Coefficients</h2>
+	  <p>
+		We now have a Mel spectrogram which gives us an amplitude and frequency representation of a signal over time that is more humanly relatable.
+		This is much more helpful, but if we wanted to compact the features/data more then we can find the Mel-Frequency Cepstral Coefficients (MFCC).
+		For the full pipeline to get these coefficients, the signal will first go through framing and windowing then a fast Fourier transform will be applied to each window giving us a power spectrum.
+		Now you apply the Mel filterbank and pass the power spectrum through it. 
+		At this point you have a Mel spectrogram, but when taking the log then you'll have dBs.
+		Applying a discrete cosine transform to the log Mel filterbank energies will give you Mel-Frequency Cepstral Coefficients which are usually just 13 coefficients when truncated.
+	  </p>
+	  
+	  <figure>
+	    <img src="../images/blogImages/MelSpectrogram/YesMFCC.png" alt="Yes signal MFCC" />
+	    <figcaption>Fig. 2 — The "Yes" signal graphed with MFCCs.</figcaption>
+	  </figure>
+	  
+	  <h2>Mel Spectrogram Vs. Mel-Frequency Cepstral Coefficients</h2>
+	  <p>
+		MFCCs are helpful since they can compress your Mel spectrogram and also let you focus more on the overall shape of the spectral envelope.
+		This compression is great since it can remove pitch differences so the same word at different pitches will show up the same.
+		The main issue though is that you can't see the specific frequency band anymore and the compression is lossy so you can't recreate the signal when you truncate away coefficients.
+		The loss of specific frequency bands is a big problem for convolutional neural networks because they work by detecting local patterns in the 2D layout.
+		This is where a Mel spectrogram being fed into a CNN is much more helpful since a Mel spectrogram still holds all the data needed.
+	  </p>
+
+      <h2>Sources</h2>
+      <p>
+        The following are sources I used to create these notes:
+      </p>
+      
+      <ul>
+        <li><a href="https://www.youtube.com/watch?v=iCwMQJnKk2c&list=PL-wATfeyAMNqIee7cH3q1bh4QJFAaeNv0" target="_blank" rel="noopener noreferrer">YouTube — audio signal processing playlist</a></li>
+        <li><a href="https://www.youtube.com/watch?v=SJo7vPgRlBQ" target="_blank" rel="noopener noreferrer">YouTube — MFCC explainer</a></li>
+        <li><a href="https://www.geeksforgeeks.org/nlp/mel-frequency-cepstral-coefficients-mfcc-for-speech-recognition/" target="_blank" rel="noopener noreferrer">GeeksforGeeks — MFCC for Speech Recognition</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Mel-frequency_cepstrum" target="_blank" rel="noopener noreferrer">Wikipedia — Mel-frequency cepstrum</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Mel_scale" target="_blank" rel="noopener noreferrer">Wikipedia — Mel scale</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Spectrogram" target="_blank" rel="noopener noreferrer">Wikipedia — Spectrogram</a></li>
+      </ul>
+    </div>
+
+  </main>
+
+  <footer class="container">
+    <p>© 2026 Thomas Ellett</p>
+    <p><a href="../index.html" style="color: var(--ink-faint); text-decoration: none;">← Back to home</a></p>
+  </footer>
+
+</body>
+</html>

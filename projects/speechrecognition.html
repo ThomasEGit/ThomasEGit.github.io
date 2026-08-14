@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speech Recognition — Thomas Ellett</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a18;
+      --ink-muted: #5a5a54;
+      --ink-faint: #6e6e66;      /* darkened from #9a9a90 — old value failed WCAG AA on the paper background */
+      --paper: #faf9f6;
+      --paper-tint: #f1f0ec;
+      --rule: #dddbd3;
+      --accent: #2a4fa8;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Source Serif 4', Georgia, serif;
+      --mono: 'DM Mono', 'Courier New', monospace;
+      --max: 720px;
+    }
+
+    html { font-size: 18px; }
+    body { font-family: var(--serif); background: var(--paper); color: var(--ink); line-height: 1.75; }
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--paper); border-bottom: 1px solid var(--rule); padding: 0.85rem 0;
+    }
+    nav .inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-name { font-family: system-ui, -apple-system, sans-serif; font-size: 0.95rem; font-weight: 500; text-decoration: none; color: var(--ink); }
+    .nav-back {
+      font-family: system-ui, -apple-system, sans-serif; font-size: 0.85rem; font-weight: 400;
+      text-decoration: none; color: var(--ink-muted); transition: color 0.15s;
+      display: flex; align-items: center; gap: 0.35rem;
+    }
+    .nav-back:hover { color: var(--accent); }
+
+    /* HEADER */
+    .project-header { padding: 3.5rem 0 2.5rem; border-bottom: 1px solid var(--rule); }
+    .breadcrumb { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 1rem; }
+    .breadcrumb a { color: var(--ink-faint); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--accent); }
+    h1 { font-family: var(--serif); font-size: 2.2rem; font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 1rem; }
+    .project-meta { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.25rem; }
+    .meta-item { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; color: var(--ink-faint); }
+    .meta-item strong { color: var(--ink-muted); font-weight: 600; display: block; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+    .tag {
+      font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.05em;
+      background: var(--paper-tint); border: 1px solid var(--rule); color: var(--ink-muted);
+      padding: 0.25rem 0.7rem; border-radius: 2px; display: inline-block;
+    }
+
+    /* CONTENT */
+    .project-content { padding: 2.5rem 0; }
+    .project-content h2 { font-family: var(--serif); font-size: 1.3rem; font-weight: 400; margin: 2.5rem 0 0.85rem; }
+    .project-content h2:first-child { margin-top: 0; }
+    .project-content p { font-size: 1rem; color: var(--ink-muted); margin-bottom: 1.1rem; line-height: 1.8; }
+    .project-content ul { padding-left: 1.5rem; color: var(--ink-muted); font-size: 1rem; line-height: 1.8; margin-bottom: 1.1rem; }
+    .project-content li { margin-bottom: 0.35rem; }
+
+    /* Single wide image */
+    .image-wide figure { margin: 0 0 1.5rem; }
+    .image-wide img { width: 100%; display: block; border-radius: 3px; border: 1px solid var(--rule); background: var(--paper-tint); }
+    .image-wide figcaption { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 0.04em; margin-top: 0.5rem; }
+
+    /* FOOTER */
+    footer { padding: 2rem 0; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+    footer p { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.06em; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="inner">
+      <a class="nav-name" href="../index.html">Thomas Ellett</a>
+      <a class="nav-back" href="../index.html#projects">← Projects</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <header class="project-header">
+      <p class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#projects">Projects</a> / Speech Recognition</p>
+      <h1>Speech Recognition</h1>
+      <p style="font-size: 1.05rem; color: var(--ink-muted); margin-top: 0.5rem; max-width: 580px;">
+        This project explores the idea of using only frequency characteristics of keywords to enable voice commands.
+      </p>
+      <div class="project-meta">
+        <div class="meta-item"><strong>Status</strong>Completed</div>
+        <div class="meta-item"><strong>Year</strong>2021</div>
+        <div class="meta-item"><strong>Stack</strong>Python</div>
+      </div>
+    </header>
+
+    <div class="project-content">
+
+      <h2>Overview</h2>
+      <p>
+		Expanding the methods by which people can interact with computers increases accessibility and user satisfaction.
+		This project explores what can be achieved for simple "Yes" and "No" voice detection using only the frequency characteristics of those words.
+		More importantly, I wanted to see if the frequencies of these words are distinct enough to allow for accurate detection.
+      </p>
+
+      <h2>Approach</h2>
+      <p>
+        I simply couldn't use my own voice to analyze the frequency because listening to my own voice makes me cringe and more importantly, that would be just one sample.
+		For this project, I needed a large dataset of different ways people say "Yes" and "No," which fortunately Kaggle provides.
+		I took this dataset and wanted to see how just two samples compared in terms of frequency and power.
+		The intuition is that the word "Yes" has a hissing "S" sound, which I suspected would show up differently compared to the word "No".
+		Figure 1 is a graphical comparison between one "Yes" and one "No" signal in power spectral density from the dataset.
+      </p>
+	  
+	  <div class="image-wide">
+        <figure>
+		  <img src="../images/projectImages/SpeechRecognition/SpeechRecognitionF1.png" alt="Power spectral density of Yes vs No signals" />
+            <figcaption>Fig. 1 — "Yes" and "No" signal power spectral density.</figcaption>
+        </figure>
+      </div>
+
+	  <p>
+		Based on Figure 1, I noticed that the "No" signal has much less power at high frequencies compared to lower frequencies, while the "Yes" signal retains slightly more power in the higher frequency range.
+		I computed this ratio for all signals in the dataset to determine if this pattern holds consistently.
+		Figure 2 is a histogram of the computed ratios for all the "Yes" and "No" signals.
+	  </p>
+	  
+	  <div class="image-wide">
+        <figure>
+		  <img src="../images/projectImages/SpeechRecognition/SpeechRecognitionF2.png" alt="Histogram of Yes and No Signal" />
+            <figcaption>Fig. 2 — Histogram of "Yes" and "No" signal high to low frequency power ratio.</figcaption>
+        </figure>
+      </div>
+	  
+	  <p>
+		In Figure 2, the "No" signals in the dataset have a much lower high/low frequency power ratio while the "Yes" signals are more broadly distributed.
+		There is clear overlap which will cause some inaccuracies, but the goal is to find the best single ratio value to determine whether a signal is "Yes" or "No".
+		Figure 3 shows the success rate using the best possible chosen threshold.
+	  </p>
+	  
+	  <div class="image-wide">
+        <figure>
+		  <img src="../images/projectImages/SpeechRecognition/SpeechRecognitionF3.png" alt="Histogram of Yes and No Signal with success rate" />
+            <figcaption>Fig. 3 — Best ratio value to choose for "Yes" and "No" signal determination with success rate.</figcaption>
+        </figure>
+      </div>        
+	  
+
+	  
+      <h2>Results</h2>
+      <p>
+        Ultimately, using solely frequency characteristics is an imperfect method for distinguishing these words.
+		Figure 3 shows an 87% success rate, but that is with curated data.
+		In a real-world scenario, background noise, accents, or signal quality issues could all decrease accuracy further.
+      </p>
+
+      <h2>Next Steps</h2>
+      <p>
+		There is room for improvement where a Mel spectrogram can be used for speech recognition instead of high/low ratios. Maybe pairing that with a deep learning model can help.
+      </p>
+
+    </div>
+
+  </main>
+
+  <footer class="container">
+    <p>© 2026 Thomas Ellett</p>
+    <p><a href="../index.html" style="color: var(--ink-faint); text-decoration: none;">← Back to home</a></p>
+  </footer>
+
+</body>
+</html>
